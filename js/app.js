@@ -91,13 +91,23 @@ async function initAuth() {
 }
 
 function showAuth() {
-  document.getElementById('auth-screen').classList.add('active');
-  document.getElementById('app-screen').classList.remove('active');
+  const auth = document.getElementById('auth-screen');
+  const app  = document.getElementById('app-screen');
+  auth.classList.add('active');
+  auth.style.display = 'flex';
+  app.classList.remove('active');
+  app.style.display = 'none';
+  document.body.style.overflow = 'hidden';
 }
 
 async function showApp() {
-  document.getElementById('auth-screen').classList.remove('active');
-  document.getElementById('app-screen').classList.add('active');
+  const auth = document.getElementById('auth-screen');
+  const app  = document.getElementById('app-screen');
+  auth.classList.remove('active');
+  auth.style.display = 'none';
+  app.classList.add('active');
+  app.style.display = 'flex';
+  document.body.style.overflow = '';
   document.getElementById('header-username').textContent = currentUser.email.split('@')[0];
   loadSettings();
   await loadMonth();
