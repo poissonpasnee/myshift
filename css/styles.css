@@ -636,3 +636,49 @@ button { cursor: pointer; background: none; border: none; }
   transition: border-color var(--t);
 }
 .quota-item input:focus { border-color: var(--blue); }
+
+/* ── Modale Congés ───────────────────────────────────────── */
+.conges-modal-hint {
+  font-size: 13px; color: var(--text-muted);
+  margin-bottom: var(--s3); text-align: center;
+}
+.conges-choice-grid {
+  display: flex; flex-direction: column; gap: var(--s2);
+}
+.conges-choice-btn {
+  display: grid;
+  grid-template-columns: 32px 48px 1fr auto;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s3) var(--s4);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all var(--t);
+  text-align: left;
+}
+.conges-choice-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: var(--blue);
+  transform: translateX(2px);
+}
+.conges-choice-btn.active {
+  background: rgba(59,130,246,0.15);
+  border-color: var(--blue);
+}
+.conges-choice-btn.depleted {
+  opacity: 0.45;
+}
+.cc-emoji { font-size: 20px; text-align: center; }
+.cc-type  { font-size: 14px; font-weight: 800; color: var(--text); }
+.cc-label { font-size: 12px; color: var(--text-muted); }
+.cc-remain {
+  font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,0.08);
+  padding: 2px 8px; border-radius: 99px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.conges-choice-btn.active .cc-remain { color: var(--blue); }
+.conges-choice-btn.depleted .cc-remain { color: var(--red); }
