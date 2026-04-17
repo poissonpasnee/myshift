@@ -198,7 +198,7 @@ function saveSettingsLocal() {
 }
 
 document.getElementById('btn-settings').addEventListener('click',()=>openModal('modal-settings'));
-document.getElementById('btn-export-trigger').addEventListener('click',()=>exportExcel());
+const exportBtn=document.getElementById('btn-export-trigger'); if(exportBtn) exportBtn.addEventListener('click',()=>exportExcel());
 document.getElementById('save-settings-btn').addEventListener('click',saveSettingsLocal);
 document.getElementById('btn-logout').addEventListener('click',async()=>{ await sb.auth.signOut(); shiftsCache={}; selectedDate=null; });
 document.getElementById('close-settings-modal').addEventListener('click',()=>closeModal('modal-settings'));
@@ -494,10 +494,10 @@ function countCongesByType(year){
 }
 
 function updateCongesWidget(){
-  const yrEl=document.getElementById('conges-year');
-  if(yrEl) yrEl.textContent=new Date().getFullYear();
   const widget=document.getElementById('conges-widget');
   if(!widget) return;
+  const yrEl=document.getElementById('conges-year');
+  if(yrEl) yrEl.textContent=new Date().getFullYear();
   const year=new Date().getFullYear();
   const used=countCongesByType(year);
   const quotas={CA:settings.quotaCA,RU:settings.quotaRU,RP:settings.quotaRP,RN:settings.quotaRN,AUTRE:settings.quotaAutre};
