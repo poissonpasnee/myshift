@@ -1,0 +1,10 @@
+{
+  "name": "MyShift AI",
+  "short_name": "MyShift",
+  "description": "Gestion de planning ferroviaire",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0d0d0f",
+  "theme_color": "#0d0d0f",
+  "orientation": "portrait"
+}
