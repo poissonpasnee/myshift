@@ -537,6 +537,7 @@ document.querySelectorAll('.dock-btn').forEach(btn=>{
 
 async function handleAction(action){
   if(action==='note'){   openNoteModal(shiftsCache[selectedDate]?.note||''); return; }
+  if(action==='conges'){  openCongesModal(); return; }
   if(action==='autre'){  openAutreModal(); return; }
   if(action==='export'){ exportExcel(); return; }
   if(action==='effacer'){
@@ -571,6 +572,39 @@ document.getElementById('save-note-btn').addEventListener('click',saveNote);
 document.getElementById('close-note-modal').addEventListener('click',()=>closeModal('modal-note'));
 document.getElementById('close-note-modal-2').addEventListener('click',()=>closeModal('modal-note'));
 
+
+// ── Modale Congés ────────────────────────────────────────
+function openCongesModal(){
+  if(!selectedDate){toast('Sélectionnez un jour d'abord','info');return;}
+  const year=new Date().getFullYear();
+  const used=countCongesByType(year);
+  const quotas={CA:settings.quotaCA,RU:settings.quotaRU,RP:settings.quotaRP,RN:settings.quotaRN,AUTRE:settings.quotaAutre};
+  const emojis={CA:'🏖️',RU:'😴',RP:'🛋️',RN:'🌃',AUTRE:'📋'};
+  const grid=document.getElementById('conges-choice-grid');
+  grid.innerHTML='';
+  CONGE_TYPES.forEach(type=>{
+    const quota=quotas[type]||0;
+    const use=used[type]||0;
+    const remain=Math.max(0,quota-use);
+    const isActive=shiftsCache[selectedDate]?.status?.toUpperCase()===type;
+    const btn=document.createElement('button');
+    btn.className='conges-choice-btn'+(isActive?' active':'')+(remain<=0&&!isActive?' depleted':'');
+    btn.innerHTML=`
+      <span class="cc-emoji">${emojis[type]}</span>
+      <span class="cc-type">${type}</span>
+      <span class="cc-label">${CONGE_LABELS[type]}</span>
+      <span class="cc-remain">${remain}j restants</span>`;
+    btn.addEventListener('click',async()=>{
+      await saveEntry(selectedDate,type);
+      closeModal('modal-conges');
+      renderCalendar(); selectDay(selectedDate);
+      toast(`${type} posé ✓`,'success');
+    });
+    grid.appendChild(btn);
+  });
+  openModal('modal-conges');
+}
+
 // ── Autre ────────────────────────────────────────────────
 function openAutreModal(){
   if(!selectedDate){toast('Sélectionnez un jour d\'abord','info');return;}
@@ -587,6 +621,7 @@ function openAutreModal(){
   openModal('modal-autre');
 }
 document.getElementById('close-autre-modal').addEventListener('click',()=>closeModal('modal-autre'));
+document.getElementById('close-conges-modal').addEventListener('click',()=>closeModal('modal-conges'));
 
 // ── Export Excel ─────────────────────────────────────────
 function exportExcel(){
