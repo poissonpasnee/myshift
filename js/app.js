@@ -8,6 +8,8 @@ const SUPABASE_URL      = 'https://thfxuliapdacxwdpbnca.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoZnh1bGlhcGRhY3h3ZHBibmNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MzAwMzQsImV4cCI6MjA5MjAwNjAzNH0.iIB_0t8SSF3pR3f-4rcUtYJz6cbS892LBpPdh_7wDuM';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+document.addEventListener('DOMContentLoaded', function() {
+
 // ── Debug visuel mobile ──────────────────────────────────
 (function(){
   const errors = [];
@@ -882,3 +884,4 @@ async function importSchedule(entries){
 
 // ── Init ─────────────────────────────────────────────────
 initAuth();
+}); // fin DOMContentLoaded
