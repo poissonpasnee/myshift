@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="theme-color" content="#0d0d0f" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -36,15 +36,27 @@
       </div>
       <p class="auth-tagline">Gérez votre planning automatiquement.</p>
       <div id="auth-login-form">
-        <div class="form-group"><label for="auth-email">Email</label><input type="email" id="auth-email" placeholder="vous@exemple.com" autocomplete="email" /></div>
-        <div class="form-group"><label for="auth-password">Mot de passe</label><input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" /></div>
+        <div class="form-group">
+          <label for="auth-email">Email</label>
+          <input type="email" id="auth-email" placeholder="vous@exemple.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label for="auth-password">Mot de passe</label>
+          <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
         <div id="auth-error" class="auth-error hidden"></div>
         <button class="btn-primary" id="btn-login">Connexion</button>
         <p class="auth-switch">Pas encore de compte ? <a href="#" id="link-register">Créer un compte</a></p>
       </div>
       <div id="auth-register-form" class="hidden">
-        <div class="form-group"><label for="reg-email">Email</label><input type="email" id="reg-email" placeholder="vous@exemple.com" autocomplete="email" /></div>
-        <div class="form-group"><label for="reg-password">Mot de passe</label><input type="password" id="reg-password" placeholder="••••••••" autocomplete="new-password" /></div>
+        <div class="form-group">
+          <label for="reg-email">Email</label>
+          <input type="email" id="reg-email" placeholder="vous@exemple.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Mot de passe</label>
+          <input type="password" id="reg-password" placeholder="••••••••" autocomplete="new-password" />
+        </div>
         <div id="reg-error" class="auth-error hidden"></div>
         <button class="btn-primary" id="btn-register">Créer mon compte</button>
         <p class="auth-switch">Déjà un compte ? <a href="#" id="link-login">Se connecter</a></p>
@@ -54,7 +66,6 @@
 
   <!-- ── APP ── -->
   <div id="app-screen" class="screen">
-
     <header class="app-header glass">
       <div class="header-left">
         <div class="header-logo">
@@ -69,47 +80,76 @@
         <span class="header-user" id="header-username"></span>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" id="btn-import-trigger" title="Importer Excel" aria-label="Importer Excel">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <button class="icon-btn export-btn" id="btn-export-trigger" title="Exporter Excel" aria-label="Exporter en Excel">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
-        <button class="icon-btn" id="btn-export-excel" title="Exporter Excel" aria-label="Exporter Excel">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
-        <button class="icon-btn" id="btn-conges-counter" title="Congés" aria-label="Compteur de congés">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+        <button class="icon-btn" id="btn-import-trigger" title="Importer Excel" aria-label="Importer un fichier Excel">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </button>
         <button class="icon-btn" id="btn-settings" title="Paramètres" aria-label="Paramètres">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
         </button>
       </div>
     </header>
 
     <main class="app-main">
-      <!-- Calendrier -->
       <div class="calendar-container glass">
         <div class="cal-nav">
-          <button class="nav-btn" id="btn-prev-month" aria-label="Mois précédent"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-          <div class="cal-title"><span id="cal-month-name"></span><span id="cal-year"></span></div>
-          <button class="nav-btn" id="btn-next-month" aria-label="Mois suivant"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <button class="nav-btn" id="btn-prev-month" aria-label="Mois précédent">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="cal-title">
+            <span id="cal-month-name"></span>
+            <span id="cal-year"></span>
+          </div>
+          <button class="nav-btn" id="btn-next-month" aria-label="Mois suivant">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
+
         <div class="cal-tabs">
           <button class="tab-btn active" id="tab-today">Aujourd'hui</button>
           <button class="tab-btn" id="tab-stats">📊 Stats</button>
         </div>
-        <div id="cal-grid">
+
+        <div class="cal-grid" id="cal-grid">
           <div class="cal-headers" id="cal-headers"></div>
           <div class="cal-days" id="cal-days"></div>
         </div>
+
         <div class="monthly-summary" id="monthly-summary">
-          <div class="summary-item"><span class="summary-icon">☀️</span><span class="summary-count" id="sum-jours">0</span><span class="summary-label">Jours</span></div>
-          <div class="summary-item"><span class="summary-icon">🌙</span><span class="summary-count" id="sum-nuits">0</span><span class="summary-label">Nuits</span></div>
-          <div class="summary-item"><span class="summary-icon">🏠</span><span class="summary-count" id="sum-repos">0</span><span class="summary-label">Repos</span></div>
-          <div class="summary-item salary"><span class="summary-salary" id="sum-salary">0 €</span><span class="summary-label">Est. Brut</span></div>
+          <div class="summary-item">
+            <span class="summary-icon">☀️</span>
+            <span class="summary-count" id="sum-jours">0</span>
+            <span class="summary-label">Jours</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-icon">🌙</span>
+            <span class="summary-count" id="sum-nuits">0</span>
+            <span class="summary-label">Nuits</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-icon">🏠</span>
+            <span class="summary-count" id="sum-repos">0</span>
+            <span class="summary-label">Repos</span>
+          </div>
+          <div class="summary-item salary">
+            <span class="summary-salary" id="sum-salary">0 €</span>
+            <span class="summary-label">Est. Brut</span>
+          </div>
         </div>
-        <div class="stats-panel hidden" id="stats-panel"><div class="stats-grid" id="stats-grid"></div></div>
+
+        <!-- Compteur congés -->
+        <div class="conges-section">
+          <div class="conges-title">🏖️ Solde Congés — <span id="conges-year"></span></div>
+          <div id="conges-widget"></div>
+        </div>
+
+        <div class="stats-panel hidden" id="stats-panel">
+          <div class="stats-grid" id="stats-grid"></div>
+        </div>
       </div>
 
-      <!-- Zone détails -->
       <div class="detail-zone glass" id="detail-zone">
         <div class="detail-header">
           <span class="detail-date-label" id="detail-date-label">Sélectionnez un jour</span>
@@ -121,29 +161,31 @@
       </div>
     </main>
 
-    <!-- Dock -->
     <nav class="dock glass" id="action-dock" aria-label="Actions">
-      <button class="dock-btn" data-action="jour"><span class="dock-icon">☀️</span><span class="dock-label">JOUR</span></button>
-      <button class="dock-btn" data-action="nuit"><span class="dock-icon">🌙</span><span class="dock-label">NUIT</span></button>
-      <button class="dock-btn" data-action="mn"><span class="dock-icon">🌄</span><span class="dock-label">MN</span></button>
-      <button class="dock-btn" data-action="repos"><span class="dock-icon">🏠</span><span class="dock-label">REPOS</span></button>
-      <button class="dock-btn dock-btn-conges" data-action="conges"><span class="dock-icon">🏖️</span><span class="dock-label">CONGÉS</span></button>
-      <button class="dock-btn" data-action="note"><span class="dock-icon">📝</span><span class="dock-label">NOTE</span></button>
-      <button class="dock-btn" data-action="autre"><span class="dock-icon">⚙️</span><span class="dock-label">AUTRE</span></button>
-      <button class="dock-btn dock-btn-delete" data-action="effacer"><span class="dock-icon">🗑️</span><span class="dock-label">EFFACER</span></button>
+      <button class="dock-btn" data-action="jour" aria-label="Jour"><span class="dock-icon">☀️</span><span class="dock-label">JOUR</span></button>
+      <button class="dock-btn" data-action="nuit" aria-label="Nuit"><span class="dock-icon">🌙</span><span class="dock-label">NUIT</span></button>
+      <button class="dock-btn" data-action="mn" aria-label="Montée de nuit"><span class="dock-icon">🌄</span><span class="dock-label">MN</span></button>
+      <button class="dock-btn" data-action="repos" aria-label="Repos"><span class="dock-icon">🏠</span><span class="dock-label">REPOS</span></button>
+      <button class="dock-btn dock-btn-conges" data-action="conges" aria-label="Congés"><span class="dock-icon">🏖️</span><span class="dock-label">CONGÉS</span></button>
+      <button class="dock-btn" data-action="note" aria-label="Note"><span class="dock-icon">📝</span><span class="dock-label">NOTE</span></button>
+      <button class="dock-btn" data-action="autre" aria-label="Autre"><span class="dock-icon">⚙️</span><span class="dock-label">AUTRE</span></button>
+      <button class="dock-btn dock-btn-delete" data-action="effacer" aria-label="Effacer"><span class="dock-icon">🗑️</span><span class="dock-label">EFFACER</span></button>
     </nav>
   </div>
 
-  <!-- ── MODALE NOTE ── -->
+  <!-- Modale Note -->
   <div class="modal-overlay hidden" id="modal-note" role="dialog" aria-modal="true">
     <div class="modal glass">
       <div class="modal-header"><h3>📝 Note</h3><button class="modal-close" id="close-note-modal">✕</button></div>
       <div class="modal-body"><textarea id="note-textarea" placeholder="Écrivez votre note ici..." rows="4"></textarea></div>
-      <div class="modal-footer"><button class="btn-secondary" id="close-note-modal-2">Annuler</button><button class="btn-primary" id="save-note-btn">Sauvegarder</button></div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="close-note-modal-2">Annuler</button>
+        <button class="btn-primary" id="save-note-btn">Sauvegarder</button>
+      </div>
     </div>
   </div>
 
-  <!-- ── MODALE AUTRE ── -->
+  <!-- Modale Autre -->
   <div class="modal-overlay hidden" id="modal-autre" role="dialog" aria-modal="true">
     <div class="modal glass">
       <div class="modal-header"><h3>⚙️ Code spécial</h3><button class="modal-close" id="close-autre-modal">✕</button></div>
@@ -151,21 +193,7 @@
     </div>
   </div>
 
-  <!-- ── MODALE CONGÉS ── -->
-  <div class="modal-overlay hidden" id="modal-conges" role="dialog" aria-modal="true">
-    <div class="modal modal-lg glass">
-      <div class="modal-header"><h3>🏖️ Compteur de Congés</h3><button class="modal-close" id="close-conges-modal">✕</button></div>
-      <div class="modal-body">
-        <p class="conges-year-label" id="conges-year-label"></p>
-        <div class="conges-grid" id="conges-grid"></div>
-        <div class="conges-reset-section">
-          <button class="btn-secondary" id="btn-reset-conges" style="width:100%;margin-top:12px">🔄 Réinitialiser au 1er janvier</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── MODALE PARAMÈTRES ── -->
+  <!-- Modale Paramètres -->
   <div class="modal-overlay hidden" id="modal-settings" role="dialog" aria-modal="true">
     <div class="modal modal-lg glass">
       <div class="modal-header"><h3>⚙️ Paramètres</h3><button class="modal-close" id="close-settings-modal">✕</button></div>
@@ -185,7 +213,7 @@
           </div>
         </section>
         <section class="settings-section">
-          <h4 class="settings-section-title">🏖️ QUOTAS CONGÉS (année en cours)</h4>
+          <h4 class="settings-section-title">🏖️ QUOTAS CONGÉS</h4>
           <div class="quota-grid">
             <div class="quota-item"><label>CA — Congés Annuels</label><input type="number" id="quota-CA" value="24" min="0" /></div>
             <div class="quota-item"><label>RU — Repos Unique</label><input type="number" id="quota-RU" value="12" min="0" /></div>
@@ -194,18 +222,9 @@
             <div class="quota-item" style="grid-column:span 2"><label>AUTRE</label><input type="number" id="quota-AUTRE" value="0" min="0" /></div>
           </div>
         </section>
-
         <section class="settings-section">
           <h4 class="settings-section-title">💰 BASE MENSUELLE</h4>
           <div class="form-group"><label for="settings-base">Salaire de base (€)</label><input type="number" id="settings-base" value="2093.06" step="0.01" min="0" /></div>
-        </section>
-        <section class="settings-section">
-          <h4 class="settings-section-title">🔔 NOTIFICATIONS</h4>
-          <div class="notif-row">
-            <span>Rappel hebdo (vendredi)</span>
-            <button class="toggle-btn" id="toggle-notif" data-active="false">Activer</button>
-          </div>
-          <p class="notif-info" id="notif-status">Les notifications vous rappellent de remplir le planning chaque vendredi.</p>
         </section>
         <section class="settings-section">
           <h4 class="settings-section-title">🔐 APPLICATION</h4>
@@ -213,27 +232,6 @@
         </section>
       </div>
       <div class="modal-footer"><button class="btn-primary" id="save-settings-btn">Sauvegarder</button></div>
-    </div>
-  </div>
-
-  <!-- ── MODALE EXPORT ── -->
-  <div class="modal-overlay hidden" id="modal-export" role="dialog" aria-modal="true">
-    <div class="modal glass">
-      <div class="modal-header"><h3>📊 Export Excel</h3><button class="modal-close" id="close-export-modal">✕</button></div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="export-year">Année</label>
-          <input type="number" id="export-year" value="2026" min="2020" max="2030" />
-        </div>
-        <div class="form-group">
-          <label>Mois (laisser vide = année complète)</label>
-          <div class="month-select-grid" id="month-select-grid"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" id="close-export-modal-2">Annuler</button>
-        <button class="btn-primary" id="confirm-export-btn">📥 Télécharger</button>
-      </div>
     </div>
   </div>
 
