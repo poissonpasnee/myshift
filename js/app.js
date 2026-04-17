@@ -8,6 +8,28 @@ const SUPABASE_URL      = 'https://thfxuliapdacxwdpbnca.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoZnh1bGlhcGRhY3h3ZHBibmNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MzAwMzQsImV4cCI6MjA5MjAwNjAzNH0.iIB_0t8SSF3pR3f-4rcUtYJz6cbS892LBpPdh_7wDuM';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ── Debug visuel mobile ──────────────────────────────────
+(function(){
+  const errors = [];
+  const orig = console.error.bind(console);
+  console.error = (...args) => { errors.push(args.join(' ')); orig(...args); showDebug(); };
+  window.onerror = (msg, src, line) => { errors.push(`${msg} (ligne ${line})`); showDebug(); };
+  window.onunhandledrejection = e => { errors.push('Promise: ' + (e.reason?.message || e.reason)); showDebug(); };
+  function showDebug(){
+    let el = document.getElementById('debug-panel');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'debug-panel';
+      el.style.cssText = 'position:fixed;bottom:80px;left:10px;right:10px;z-index:9999;background:rgba(0,0,0,0.92);border:1px solid #ef4444;border-radius:12px;padding:12px;font-size:11px;color:#fca5a5;max-height:180px;overflow-y:auto;font-family:monospace;';
+      el.innerHTML = '<div style="font-weight:700;margin-bottom:6px;color:#fff">🐛 Debug (visible mobile)</div><div id="debug-msgs"></div>';
+      document.body.appendChild(el);
+    }
+    document.getElementById('debug-msgs').innerHTML = errors.slice(-5).map(e=>`<div style="margin-bottom:4px;border-bottom:1px solid #333;padding-bottom:4px">${e}</div>`).join('');
+  }
+})();
+
+
+
 // ── État global ──────────────────────────────────────────
 let currentUser  = null;
 let selectedDate = null;
