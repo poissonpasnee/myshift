@@ -106,13 +106,26 @@ button { cursor: pointer; background: none; border: none; }
 }
 
 /* ── Screens ─────────────────────────────────────────────── */
-.screen { display: none; position: relative; z-index: 1; }
-.screen.active { display: block; }
+.screen { display: none !important; position: relative; z-index: 1; }
+.screen.active { display: block !important; }
+
+/* Auth : plein écran fixe, pas de scroll vers le bas */
+#auth-screen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 500 !important;
+  overflow-y: auto !important;
+}
+#auth-screen.active { display: flex !important; }
+
+/* App : caché par défaut */
+#app-screen { display: none !important; }
+#app-screen.active { display: flex !important; }
 
 /* ── Auth ────────────────────────────────────────────────── */
 #auth-screen {
   min-height: 100dvh;
-  display: flex; align-items: center; justify-content: center;
+  align-items: center; justify-content: center;
   padding: var(--s6) var(--s4);
 }
 .auth-card {
@@ -574,3 +587,52 @@ button { cursor: pointer; background: none; border: none; }
   .dock-icon { font-size: 18px; }
   .dock-label { font-size: 10px; }
 }
+
+/* ── Widget Congés ───────────────────────────────────────── */
+.conges-section {
+  padding: var(--s3) var(--s4);
+  border-top: 1px solid var(--border);
+}
+.conges-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: var(--s3);
+}
+#conges-widget { display: flex; flex-direction: column; gap: var(--s2); }
+.conge-row {
+  display: flex; align-items: center; gap: var(--s2);
+}
+.conge-info {
+  display: flex; align-items: center; gap: var(--s1);
+  min-width: 90px;
+}
+.conge-emoji { font-size: 13px; }
+.conge-label { font-size: 12px; font-weight: 700; color: var(--text); width: 28px; }
+.conge-count { font-size: 11px; color: var(--text-muted); }
+.conge-bar-wrap {
+  flex: 1; height: 5px;
+  background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden;
+}
+.conge-bar {
+  height: 100%; border-radius: 99px;
+  transition: width 0.5s cubic-bezier(0.16,1,0.3,1);
+}
+.conge-remain { font-size: 10px; font-weight: 600; min-width: 68px; text-align: right; }
+
+/* ── Bouton Export dans header ───────────────────────────── */
+.icon-btn.export-btn { color: var(--gold); }
+
+/* ── Quota settings ─────────────────────────────────────── */
+.quota-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3);
+}
+.quota-item { display: flex; flex-direction: column; gap: var(--s1); }
+.quota-item label { font-size: 12px; color: var(--text-muted); }
+.quota-item input {
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+  border-radius: var(--r-sm); font-size: 14px; font-weight: 600;
+  color: var(--text); outline: none;
+  transition: border-color var(--t);
+}
+.quota-item input:focus { border-color: var(--blue); }
