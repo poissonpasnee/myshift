@@ -1,170 +1,171 @@
-// ═══════════════════════════════════════════════════════════
-//  MyShift AI — app.js  v3
-//  Vanilla JS ES6 | Supabase Auth/DB | SheetJS XLSX
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  MyShift AI — app.js v4
+// ═══════════════════════════════════════════════════════
 
-// ── Config Supabase ──────────────────────────────────────
 const SUPABASE_URL      = 'https://thfxuliapdacxwdpbnca.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoZnh1bGlhcGRhY3h3ZHBibmNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MzAwMzQsImV4cCI6MjA5MjAwNjAzNH0.iIB_0t8SSF3pR3f-4rcUtYJz6cbS892LBpPdh_7wDuM';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', function() {
 
-// ── Debug visuel mobile ──────────────────────────────────
-(function(){
-  const errors = [];
-  const orig = console.error.bind(console);
-  console.error = (...args) => { errors.push(args.join(' ')); orig(...args); showDebug(); };
-  window.onerror = (msg, src, line) => { errors.push(`${msg} (ligne ${line})`); showDebug(); };
-  window.onunhandledrejection = e => { errors.push('Promise: ' + (e.reason?.message || e.reason)); showDebug(); };
-  function showDebug(){
-    let el = document.getElementById('debug-panel');
-    if(!el){
-      el = document.createElement('div');
-      el.id = 'debug-panel';
-      el.style.cssText = 'position:fixed;bottom:80px;left:10px;right:10px;z-index:9999;background:rgba(0,0,0,0.92);border:1px solid #ef4444;border-radius:12px;padding:12px;font-size:11px;color:#fca5a5;max-height:180px;overflow-y:auto;font-family:monospace;';
-      el.innerHTML = '<div style="font-weight:700;margin-bottom:6px;color:#fff">🐛 Debug (visible mobile)</div><div id="debug-msgs"></div>';
-      document.body.appendChild(el);
-    }
-    document.getElementById('debug-msgs').innerHTML = errors.slice(-5).map(e=>`<div style="margin-bottom:4px;border-bottom:1px solid #333;padding-bottom:4px">${e}</div>`).join('');
-  }
-})();
-
-
-
-// ── État global ──────────────────────────────────────────
-let currentUser  = null;
-let selectedDate = null;
-let currentYear  = new Date().getFullYear();
-let currentMonth = new Date().getMonth();
-let shiftsCache  = {};
-let settings = {
-  name: '', matricule: '',
-  rateJour: 35, rateNuit: 82, rateNuitSeule: 41, rateMN: 15,
-  base: 2093.06,
-  // Compteurs congés
-  quotaCA: 24, quotaRU: 12, quotaRP: 12, quotaRN: 0, quotaAutre: 0
+// ── État global ─────────────────────────────────────────
+var currentUser  = null;
+var selectedDate = null;
+var currentYear  = new Date().getFullYear();
+var currentMonth = new Date().getMonth();
+var shiftsCache  = {};
+var settings = {
+  name:'', matricule:'',
+  rateJour:35, rateNuit:82, rateNuitSeule:41, rateMN:15,
+  base:2093.06,
+  quotaCA:24, quotaRU:12, quotaRP:12, quotaRN:0, quotaAutre:0
 };
 
-// ── Codes congés ────────────────────────────────────────
-const CONGE_TYPES = ['CA','RU','RP','RN','AUTRE'];
-const CONGE_LABELS = { CA:'Congés Annuels', RU:'Repos Unique', RP:'Repos Principal', RN:'Repos de Nuit', AUTRE:'Autre' };
-
-// ── Codes custom ─────────────────────────────────────────
-const CUSTOM_CODES = [
-  { code:'CA',        label:'Congé Annuel',   emoji:'🏖️' },
-  { code:'RU',        label:'Repos Unique',   emoji:'😴' },
-  { code:'RP',        label:'Repos Principal',emoji:'🛋️' },
-  { code:'RN',        label:'Repos Nuit',     emoji:'🌃' },
-  { code:'OCP',       label:'OCP',            emoji:'🔧' },
-  { code:'FERIE',     label:'Férié',          emoji:'🎉' },
-  { code:'FORMATION', label:'Formation',      emoji:'📚' },
-  { code:'AM',        label:'Arrêt Maladie',  emoji:'🏥' },
-  { code:'TP',        label:'Tps Partiel',    emoji:'⏱️' },
-  { code:'AUTRE',     label:'Autre',          emoji:'📋' },
+var CONGE_TYPES  = ['CA','RU','RP','RN','AUTRE'];
+var CONGE_LABELS = {CA:'Conges Annuels',RU:'Repos Unique',RP:'Repos Principal',RN:'Repos de Nuit',AUTRE:'Autre'};
+var CONGE_EMOJIS = {CA:'🏖️',RU:'😴',RP:'🛋️',RN:'🌃',AUTRE:'📋'};
+var CUSTOM_CODES = [
+  {code:'OCP',       label:'OCP',            emoji:'🔧'},
+  {code:'FERIE',     label:'Ferie',          emoji:'🎉'},
+  {code:'FORMATION', label:'Formation',      emoji:'📚'},
+  {code:'AM',        label:'Arret Maladie',  emoji:'🏥'},
+  {code:'TP',        label:'Tps Partiel',    emoji:'⏱️'},
+  {code:'AUTRE',     label:'Autre',          emoji:'📋'}
 ];
+var MONTHS_FR = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
+var MONTHS_FULL = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+var NIGHT_HDR = ['DI/LU','LU/MA','MA/ME','ME/JE','JE/VE','VE/SA','SA/DI'];
+var DAY_NAMES = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 
-// ── Locaux ───────────────────────────────────────────────
-const MONTHS_FR   = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-const NIGHT_HDR   = ['DI/LU','LU/MA','MA/ME','ME/JE','JE/VE','VE/SA','SA/DI'];
-const DAY_NAMES   = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-
-// ── Utils ────────────────────────────────────────────────
-function fmt(date) {
+// ── Utils ───────────────────────────────────────────────
+function fmtDate(date) {
   if (date instanceof Date) {
-    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    var y = date.getFullYear();
+    var m = String(date.getMonth()+1).padStart(2,'0');
+    var d = String(date.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+d;
   }
   return date;
 }
-function parseDate(str) { const [y,m,d]=str.split('-').map(Number); return new Date(y,m-1,d); }
-
-function toast(msg, type='info', duration=2400) {
-  const c = document.getElementById('toast-container');
-  const t = document.createElement('div');
-  t.className = `toast ${type}`; t.textContent = msg; c.appendChild(t);
-  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity 0.4s'; }, duration);
-  setTimeout(()=>t.remove(), duration+400);
+function parseDate(str) {
+  var parts = str.split('-');
+  return new Date(+parts[0], +parts[1]-1, +parts[2]);
 }
-function showLoading(msg='Chargement...') {
-  let el=document.getElementById('loading-overlay');
-  if(!el){ el=document.createElement('div'); el.id='loading-overlay'; el.className='loading-overlay';
-    el.innerHTML=`<div class="spinner"></div><div class="loading-text">${msg}</div>`; document.body.appendChild(el); }
-  el.querySelector('.loading-text').textContent=msg; el.classList.remove('hidden');
-}
-function hideLoading() { const el=document.getElementById('loading-overlay'); if(el) el.classList.add('hidden'); }
-
-function escapeHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
 }
 
-// ── Auth ─────────────────────────────────────────────────
+function toast(msg, type, dur) {
+  type = type||'info'; dur = dur||2400;
+  var c = document.getElementById('toast-container');
+  var t = document.createElement('div');
+  t.className = 'toast '+type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity 0.4s'; }, dur);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, dur+400);
+}
+
+function showLoading(msg) {
+  msg = msg||'Chargement...';
+  var el = document.getElementById('loading-overlay');
+  if(!el) {
+    el = document.createElement('div');
+    el.id = 'loading-overlay';
+    el.className = 'loading-overlay';
+    el.innerHTML = '<div class="spinner"></div><div class="loading-text">'+msg+'</div>';
+    document.body.appendChild(el);
+  }
+  el.querySelector('.loading-text').textContent = msg;
+  el.classList.remove('hidden');
+}
+function hideLoading() {
+  var el = document.getElementById('loading-overlay');
+  if(el) el.classList.add('hidden');
+}
+
+// ── Auth ────────────────────────────────────────────────
 async function initAuth() {
-  const { data:{ session } } = await sb.auth.getSession();
-  if (session) { currentUser=session.user; showApp(); }
-  else          { showAuth(); }
-  sb.auth.onAuthStateChange((_,session)=>{
-    if(session){ currentUser=session.user; showApp(); }
-    else{ currentUser=null; showAuth(); }
+  var res = await sb.auth.getSession();
+  if(res.data && res.data.session) {
+    currentUser = res.data.session.user;
+    showApp();
+  } else {
+    showAuthScreen();
+  }
+  sb.auth.onAuthStateChange(function(_, session) {
+    if(session) { currentUser = session.user; showApp(); }
+    else { currentUser = null; showAuthScreen(); }
   });
 }
 
-function showAuth() {
-  const auth=document.getElementById('auth-screen'), app=document.getElementById('app-screen');
-  auth.classList.add('active'); auth.style.display='flex';
-  app.classList.remove('active'); app.style.display='none';
-  document.body.style.overflow='hidden';
+function showAuthScreen() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display  = 'none';
 }
 async function showApp() {
-  const auth=document.getElementById('auth-screen'), app=document.getElementById('app-screen');
-  auth.classList.remove('active'); auth.style.display='none';
-  app.classList.add('active'); app.style.display='flex';
-  document.body.style.overflow='';
-  document.getElementById('header-username').textContent=currentUser.email.split('@')[0];
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display  = 'flex';
+  document.getElementById('header-username').textContent = currentUser.email.split('@')[0];
   loadSettings();
   scheduleWeeklyNotification();
   await loadMonth();
   renderCalendar();
   updateCongesWidget();
+  selectDay(fmtDate(new Date()));
 }
 
-document.getElementById('btn-login').addEventListener('click', async()=>{
-  const email=document.getElementById('auth-email').value.trim();
-  const pwd=document.getElementById('auth-password').value;
-  const errEl=document.getElementById('auth-error');
-  if(!email||!pwd){ errEl.textContent='Veuillez remplir tous les champs.'; errEl.classList.remove('hidden'); return; }
+document.getElementById('btn-login').addEventListener('click', async function() {
+  var email  = document.getElementById('auth-email').value.trim();
+  var pwd    = document.getElementById('auth-password').value;
+  var errEl  = document.getElementById('auth-error');
+  if(!email || !pwd) {
+    errEl.textContent = 'Veuillez remplir tous les champs.';
+    errEl.classList.remove('hidden'); return;
+  }
   showLoading('Connexion...');
-  const{error}=await sb.auth.signInWithPassword({email,password:pwd});
+  var res = await sb.auth.signInWithPassword({email:email, password:pwd});
   hideLoading();
-  if(error){ errEl.textContent=error.message; errEl.classList.remove('hidden'); }
-  else errEl.classList.add('hidden');
+  if(res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); }
+  else { errEl.classList.add('hidden'); }
 });
 
-document.getElementById('btn-register').addEventListener('click', async()=>{
-  const email=document.getElementById('reg-email').value.trim();
-  const pwd=document.getElementById('reg-password').value;
-  const errEl=document.getElementById('reg-error');
-  if(!email||!pwd){ errEl.textContent='Veuillez remplir tous les champs.'; errEl.classList.remove('hidden'); return; }
-  showLoading('Création du compte...');
-  const{error}=await sb.auth.signUp({email,password:pwd});
+document.getElementById('btn-register').addEventListener('click', async function() {
+  var email = document.getElementById('reg-email').value.trim();
+  var pwd   = document.getElementById('reg-password').value;
+  var errEl = document.getElementById('reg-error');
+  if(!email || !pwd) {
+    errEl.textContent = 'Veuillez remplir tous les champs.';
+    errEl.classList.remove('hidden'); return;
+  }
+  showLoading('Creation du compte...');
+  var res = await sb.auth.signUp({email:email, password:pwd});
   hideLoading();
-  if(error){ errEl.textContent=error.message; errEl.classList.remove('hidden'); }
-  else toast('Compte créé ! Vérifiez votre email.','success',4000);
+  if(res.error) { errEl.textContent = res.error.message; errEl.classList.remove('hidden'); }
+  else { toast('Compte cree ! Verifiez votre email.','success',4000); }
 });
 
-document.getElementById('link-register').addEventListener('click', e=>{
+document.getElementById('link-register').addEventListener('click', function(e) {
   e.preventDefault();
   document.getElementById('auth-login-form').classList.add('hidden');
   document.getElementById('auth-register-form').classList.remove('hidden');
 });
-document.getElementById('link-login').addEventListener('click', e=>{
+document.getElementById('link-login').addEventListener('click', function(e) {
   e.preventDefault();
   document.getElementById('auth-register-form').classList.add('hidden');
   document.getElementById('auth-login-form').classList.remove('hidden');
 });
 
-// ── Paramètres ───────────────────────────────────────────
+// ── Paramètres ──────────────────────────────────────────
 function loadSettings() {
-  try { const r=sessionStorage.getItem('myshift_settings'); if(r) settings={...settings,...JSON.parse(r)}; } catch(e){}
+  try {
+    var raw = sessionStorage.getItem('myshift_settings');
+    if(raw) settings = Object.assign(settings, JSON.parse(raw));
+  } catch(e) {}
   document.getElementById('settings-name').value       = settings.name||'';
   document.getElementById('settings-matricule').value  = settings.matricule||'';
   document.getElementById('rate-jour').value           = settings.rateJour;
@@ -192,160 +193,181 @@ function saveSettingsLocal() {
   settings.quotaRP       = parseInt(document.getElementById('quota-RP').value)||12;
   settings.quotaRN       = parseInt(document.getElementById('quota-RN').value)||0;
   settings.quotaAutre    = parseInt(document.getElementById('quota-AUTRE').value)||0;
-  try{ sessionStorage.setItem('myshift_settings',JSON.stringify(settings)); } catch(e){}
-  toast('Paramètres sauvegardés','success');
+  try { sessionStorage.setItem('myshift_settings', JSON.stringify(settings)); } catch(e) {}
+  toast('Parametres sauvegardes','success');
   closeModal('modal-settings');
   updateMonthlySummary();
   updateCongesWidget();
 }
 
-document.getElementById('btn-settings').addEventListener('click',()=>openModal('modal-settings'));
-const exportBtn=document.getElementById('btn-export-trigger'); if(exportBtn) exportBtn.addEventListener('click',()=>exportExcel());
-document.getElementById('save-settings-btn').addEventListener('click',saveSettingsLocal);
-document.getElementById('btn-logout').addEventListener('click',async()=>{ await sb.auth.signOut(); shiftsCache={}; selectedDate=null; });
-document.getElementById('close-settings-modal').addEventListener('click',()=>closeModal('modal-settings'));
+document.getElementById('btn-settings').addEventListener('click', function() { openModal('modal-settings'); });
+document.getElementById('save-settings-btn').addEventListener('click', saveSettingsLocal);
+document.getElementById('close-settings-modal').addEventListener('click', function() { closeModal('modal-settings'); });
+document.getElementById('btn-logout').addEventListener('click', async function() {
+  await sb.auth.signOut(); shiftsCache={}; selectedDate=null;
+});
 
-// ── Notifications hebdomadaires (vendredi) ───────────────
+var exportBtnEl = document.getElementById('btn-export-trigger');
+if(exportBtnEl) exportBtnEl.addEventListener('click', function() { exportExcel(); });
+
+// ── Notifications vendredi ──────────────────────────────
 function scheduleWeeklyNotification() {
   if(!('Notification' in window)) return;
-  Notification.requestPermission().then(perm=>{
-    if(perm!=='granted') return;
+  Notification.requestPermission().then(function(perm) {
+    if(perm !== 'granted') return;
     checkAndNotify();
-    // Vérifier toutes les heures
     setInterval(checkAndNotify, 60*60*1000);
   });
 }
-
 function checkAndNotify() {
-  if(Notification.permission!=='granted') return;
-  const now   = new Date();
-  const isFri = now.getDay()===5; // 5 = vendredi
-  if(!isFri) return;
-  const todayStr = fmt(now);
-  const lastKey  = 'myshift_last_notif';
-  try{
-    const last = sessionStorage.getItem(lastKey);
-    if(last===todayStr) return; // déjà notifié aujourd'hui
-    sessionStorage.setItem(lastKey, todayStr);
-  } catch(e){}
-  new Notification('MyShift AI 📅', {
-    body: 'N\'oubliez pas de remplir votre planning cette semaine !',
-    icon: '/myshift/icons/icon-192.png',
-    badge: '/myshift/icons/icon-192.png'
+  if(Notification.permission !== 'granted') return;
+  var now = new Date();
+  if(now.getDay() !== 5) return;
+  var todayStr = fmtDate(now);
+  try {
+    var last = sessionStorage.getItem('myshift_last_notif');
+    if(last === todayStr) return;
+    sessionStorage.setItem('myshift_last_notif', todayStr);
+  } catch(e) {}
+  new Notification('MyShift AI', {
+    body: 'Pensez a remplir votre planning cette semaine !'
   });
 }
 
-// ── Données Supabase ─────────────────────────────────────
+// ── Supabase ────────────────────────────────────────────
 async function loadMonth() {
   if(!currentUser) return;
-  const from=fmt(new Date(currentYear,currentMonth-1,20));
-  const to  =fmt(new Date(currentYear,currentMonth+1,10));
-  const{data,error}=await sb.from('shifts').select('date,status,note')
-    .eq('user_id',currentUser.id).gte('date',from).lte('date',to);
-  if(!error&&data) data.forEach(r=>{ shiftsCache[r.date]={status:r.status,note:r.note||''}; });
+  var from = fmtDate(new Date(currentYear, currentMonth-1, 20));
+  var to   = fmtDate(new Date(currentYear, currentMonth+1, 10));
+  var res  = await sb.from('shifts').select('date,status,note')
+    .eq('user_id', currentUser.id).gte('date', from).lte('date', to);
+  if(!res.error && res.data) {
+    res.data.forEach(function(r) {
+      shiftsCache[r.date] = {status: r.status, note: r.note||''};
+    });
+  }
 }
 
-async function saveEntry(dateStr, status, note=null, imported=false) {
+async function saveEntry(dateStr, status, note, imported) {
   if(!currentUser) return;
-  if(!shiftsCache[dateStr]) shiftsCache[dateStr]={};
-  if(status!==null) shiftsCache[dateStr].status=status;
-  if(note!==null)   shiftsCache[dateStr].note=note;
-  const payload={user_id:currentUser.id,date:dateStr,
-    status:shiftsCache[dateStr].status||null,
-    note:shiftsCache[dateStr].note||null, imported};
-  let{error}=await sb.from('shifts').upsert(payload,{onConflict:'user_id,date'});
-  if(error&&(error.code==='PGRST204'||error.message?.includes('imported'))){
-    const{imported:_,...retry}=payload;
-    ({error}=await sb.from('shifts').upsert(retry,{onConflict:'user_id,date'}));
+  if(!shiftsCache[dateStr]) shiftsCache[dateStr] = {};
+  if(status !== null && status !== undefined) shiftsCache[dateStr].status = status;
+  if(note   !== null && note   !== undefined) shiftsCache[dateStr].note   = note;
+  var payload = {
+    user_id: currentUser.id,
+    date:    dateStr,
+    status:  shiftsCache[dateStr].status||null,
+    note:    shiftsCache[dateStr].note||null
+  };
+  if(imported) payload.imported = true;
+  var res = await sb.from('shifts').upsert(payload, {onConflict:'user_id,date'});
+  if(res.error) {
+    delete payload.imported;
+    await sb.from('shifts').upsert(payload, {onConflict:'user_id,date'});
   }
-  if(error) console.warn('saveEntry:',error.message);
 }
 
 async function deleteEntry(dateStr) {
   if(!currentUser) return;
   delete shiftsCache[dateStr];
-  await sb.from('shifts').delete().eq('user_id',currentUser.id).eq('date',dateStr);
+  await sb.from('shifts').delete().eq('user_id', currentUser.id).eq('date', dateStr);
 }
 
-// ── Calendrier ───────────────────────────────────────────
+// ── Calendrier ──────────────────────────────────────────
 function renderCalendar() {
-  document.getElementById('cal-month-name').textContent=MONTHS_FR[currentMonth];
-  document.getElementById('cal-year').textContent=currentYear;
+  document.getElementById('cal-month-name').textContent = MONTHS_FULL[currentMonth];
+  document.getElementById('cal-year').textContent       = currentYear;
 
-  const headersEl=document.getElementById('cal-headers');
-  const daysEl   =document.getElementById('cal-days');
-  headersEl.innerHTML='<div class="cal-header-cell">SEM</div>';
-  NIGHT_HDR.forEach(h=>{ const d=document.createElement('div'); d.className='cal-header-cell'; d.textContent=h; headersEl.appendChild(d); });
+  var headersEl = document.getElementById('cal-headers');
+  var daysEl    = document.getElementById('cal-days');
+  headersEl.innerHTML = '<div class="cal-header-cell">SEM</div>';
+  NIGHT_HDR.forEach(function(h) {
+    var d = document.createElement('div');
+    d.className = 'cal-header-cell'; d.textContent = h;
+    headersEl.appendChild(d);
+  });
 
-  daysEl.innerHTML='';
-  const first=new Date(currentYear,currentMonth,1);
-  let startDow=first.getDay(); startDow=(startDow===0)?6:startDow-1;
-  const totalDays=new Date(currentYear,currentMonth+1,0).getDate();
-  const totalCells=Math.ceil((startDow+totalDays)/7)*7;
-  const today=fmt(new Date());
-  let weekNum=getWeekNumber(new Date(currentYear,currentMonth,1-startDow));
+  daysEl.innerHTML = '';
+  var first = new Date(currentYear, currentMonth, 1);
+  var startDow = first.getDay();
+  if(startDow === 0) startDow = 6; else startDow -= 1;
+  var totalDays  = new Date(currentYear, currentMonth+1, 0).getDate();
+  var totalCells = Math.ceil((startDow+totalDays)/7)*7;
+  var today      = fmtDate(new Date());
+  var weekNum    = getWeekNumber(new Date(currentYear, currentMonth, 1-startDow));
 
-  for(let i=0;i<totalCells;i++){
-    if(i%7===0){
-      const wn=document.createElement('div'); wn.className='cal-week-num'; wn.textContent=weekNum; weekNum++; daysEl.appendChild(wn);
+  for(var i=0; i<totalCells; i++) {
+    if(i%7 === 0) {
+      var wn = document.createElement('div');
+      wn.className = 'cal-week-num'; wn.textContent = weekNum; weekNum++;
+      daysEl.appendChild(wn);
     }
-    const dayOffset=i-startDow;
-    const date=new Date(currentYear,currentMonth,dayOffset+1);
-    const dateStr=fmt(date);
-    const cell=document.createElement('div'); cell.className='cal-day';
-    if(date.getMonth()!==currentMonth) cell.classList.add('other-month');
-    if(dateStr===today)                cell.classList.add('today');
-    if(dateStr===selectedDate)         cell.classList.add('selected');
+    var dayOffset = i - startDow;
+    var date      = new Date(currentYear, currentMonth, dayOffset+1);
+    var dateStr   = fmtDate(date);
+    var cell      = document.createElement('div');
+    cell.className = 'cal-day';
+    if(date.getMonth() !== currentMonth) cell.classList.add('other-month');
+    if(dateStr === today)                cell.classList.add('today');
+    if(dateStr === selectedDate)         cell.classList.add('selected');
 
-    const shift=shiftsCache[dateStr];
-    let statusClass='', statusLabel='';
-    if(shift?.status){
-      const s=shift.status.toLowerCase();
-      if(s==='jour'){       statusClass='s-jour';   statusLabel='JOUR'; }
-      else if(s==='nuit'){  statusClass='s-nuit';   statusLabel='NUIT'; }
-      else if(s==='mn'){    statusClass='s-mn';     statusLabel='MN'; }
-      else if(s==='repos'){ statusClass='s-repos';  statusLabel='REPOS'; }
-      else if(s==='conges'||s==='ca'){ statusClass='s-conges'; statusLabel=shift.status.toUpperCase(); }
-      else if(['ru','rp','rn'].includes(s)){ statusClass='s-conges'; statusLabel=shift.status.toUpperCase(); }
-      else{                 statusClass='s-custom'; statusLabel=shift.status.toUpperCase().slice(0,5); }
+    var shift = shiftsCache[dateStr];
+    var sc = '', sl = '';
+    if(shift && shift.status) {
+      var s = shift.status.toLowerCase();
+      if(s==='jour')   { sc='s-jour';   sl='JOUR'; }
+      else if(s==='nuit')  { sc='s-nuit';   sl='NUIT'; }
+      else if(s==='mn')    { sc='s-mn';     sl='MN'; }
+      else if(s==='repos') { sc='s-repos';  sl='REPOS'; }
+      else if(s==='ca')    { sc='s-conges'; sl='CA'; }
+      else if(s==='ru')    { sc='s-conges'; sl='RU'; }
+      else if(s==='rp')    { sc='s-conges'; sl='RP'; }
+      else if(s==='rn')    { sc='s-conges'; sl='RN'; }
+      else if(s==='conges'){ sc='s-conges'; sl='CGE'; }
+      else                 { sc='s-custom'; sl=shift.status.toUpperCase().slice(0,5); }
     }
-    if(statusClass) cell.classList.add(statusClass);
-    cell.innerHTML=`<span class="day-num">${date.getDate()}</span>${statusLabel?`<span class="day-status-label">${statusLabel}</span>`:''}${shift?.note?'<div class="note-dot"></div>':''}`;
-    cell.addEventListener('click',()=>selectDay(dateStr));
+    if(sc) cell.classList.add(sc);
+    cell.innerHTML = '<span class="day-num">'+date.getDate()+'</span>'
+      +(sl?'<span class="day-status-label">'+sl+'</span>':'')
+      +(shift&&shift.note?'<div class="note-dot"></div>':'');
+
+    (function(ds){ cell.addEventListener('click', function(){ selectDay(ds); }); })(dateStr);
     daysEl.appendChild(cell);
   }
   updateMonthlySummary();
-  updateStatsPanel();
   updateCongesWidget();
 }
 
-function getWeekNumber(date){
-  const d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));
-  const dn=d.getUTCDay()||7; d.setUTCDate(d.getUTCDate()+4-dn);
-  const ys=new Date(Date.UTC(d.getUTCFullYear(),0,1));
+function getWeekNumber(date) {
+  var d  = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  var dn = d.getUTCDay()||7;
+  d.setUTCDate(d.getUTCDate()+4-dn);
+  var ys = new Date(Date.UTC(d.getUTCFullYear(),0,1));
   return Math.ceil((((d-ys)/86400000)+1)/7);
 }
 
-document.getElementById('btn-prev-month').addEventListener('click',async()=>{
-  currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;} await loadMonth(); renderCalendar();
+document.getElementById('btn-prev-month').addEventListener('click', async function() {
+  currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;}
+  await loadMonth(); renderCalendar();
 });
-document.getElementById('btn-next-month').addEventListener('click',async()=>{
-  currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;} await loadMonth(); renderCalendar();
+document.getElementById('btn-next-month').addEventListener('click', async function() {
+  currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;}
+  await loadMonth(); renderCalendar();
 });
-
-document.getElementById('tab-today').addEventListener('click',()=>{
+document.getElementById('tab-today').addEventListener('click', function() {
   document.getElementById('tab-today').classList.add('active');
   document.getElementById('tab-stats').classList.remove('active');
   document.getElementById('stats-panel').classList.add('hidden');
   document.getElementById('cal-grid').classList.remove('hidden');
   document.getElementById('monthly-summary').classList.remove('hidden');
-  const today=fmt(new Date()); const td=parseDate(today);
-  if(td.getFullYear()!==currentYear||td.getMonth()!==currentMonth){
-    currentYear=td.getFullYear(); currentMonth=td.getMonth(); loadMonth().then(renderCalendar);
+  var td = new Date();
+  if(td.getFullYear()!==currentYear||td.getMonth()!==currentMonth) {
+    currentYear=td.getFullYear(); currentMonth=td.getMonth();
+    loadMonth().then(renderCalendar);
   }
-  selectDay(today);
+  selectDay(fmtDate(td));
 });
-document.getElementById('tab-stats').addEventListener('click',()=>{
+document.getElementById('tab-stats').addEventListener('click', function() {
   document.getElementById('tab-stats').classList.add('active');
   document.getElementById('tab-today').classList.remove('active');
   document.getElementById('stats-panel').classList.remove('hidden');
@@ -354,534 +376,506 @@ document.getElementById('tab-stats').addEventListener('click',()=>{
   updateStatsPanel();
 });
 
-// ── Sélection jour ───────────────────────────────────────
+// ── Sélection jour ──────────────────────────────────────
 function selectDay(dateStr) {
-  selectedDate=dateStr;
+  selectedDate = dateStr;
   renderCalendar();
-  const date=parseDate(dateStr);
-  const shift=shiftsCache[dateStr];
-  const status=shift?.status||null;
-  const note=shift?.note||'';
-  const label=`${DAY_NAMES[date.getDay()]} ${date.getDate()} ${MONTHS_FR[date.getMonth()]}`;
-  document.getElementById('detail-date-label').textContent=label;
+  var date  = parseDate(dateStr);
+  var shift = shiftsCache[dateStr];
+  var status= shift ? shift.status : null;
+  var note  = shift ? (shift.note||'') : '';
+  var label = DAY_NAMES[date.getDay()]+' '+date.getDate()+' '+MONTHS_FULL[date.getMonth()];
+  document.getElementById('detail-date-label').textContent = label;
   renderStatusBadge(status);
-  const salaryInfo=calcDaySalary(dateStr);
-  const body=document.getElementById('detail-body');
-  body.innerHTML=`
-    <div class="detail-salary-line">
-      <span class="detail-salary-amount">${salaryInfo.total.toFixed(2)} €</span>
-      <span class="detail-salary-breakdown">${salaryInfo.breakdown}</span>
-    </div>
-    <div class="detail-note-section">
-      <div class="detail-note-label">📝 NOTE</div>
-      ${note
-        ?`<div class="detail-note-text">${escapeHtml(note)}</div>
-          <div class="detail-note-actions">
-            <button class="note-action-btn" id="btn-edit-note">Modifier</button>
-            <button class="note-action-btn delete" id="btn-delete-note">Supprimer</button>
-          </div>`
-        :`<div class="detail-note-none">Aucune note — <a href="#" id="link-add-note" style="color:var(--blue);text-decoration:none;">+ Ajouter</a></div>`
-      }
-    </div>`;
-  const eb=document.getElementById('btn-edit-note');
-  const db=document.getElementById('btn-delete-note');
-  const al=document.getElementById('link-add-note');
-  if(eb) eb.addEventListener('click',()=>openNoteModal(note));
-  if(db) db.addEventListener('click',deleteNote);
-  if(al) al.addEventListener('click',e=>{e.preventDefault();openNoteModal('');});
+  var sal = calcDaySalary(dateStr);
+  var body = document.getElementById('detail-body');
+  var noteHtml = note
+    ? '<div class="detail-note-text">'+esc(note)+'</div>'
+      +'<div class="detail-note-actions">'
+      +'<button class="note-action-btn" id="btn-edit-note">Modifier</button>'
+      +'<button class="note-action-btn delete" id="btn-delete-note">Supprimer</button>'
+      +'</div>'
+    : '<div class="detail-note-none">Aucune note &mdash; <a href="#" id="link-add-note">+ Ajouter</a></div>';
+  body.innerHTML =
+    '<div class="detail-salary-line">'
+    +'<span class="detail-salary-amount">'+sal.total.toFixed(2)+' &euro;</span>'
+    +'<span class="detail-salary-breakdown">'+sal.breakdown+'</span>'
+    +'</div>'
+    +'<div class="detail-note-section">'
+    +'<div class="detail-note-label">NOTE</div>'
+    +noteHtml
+    +'</div>';
+
+  var eb = document.getElementById('btn-edit-note');
+  var db = document.getElementById('btn-delete-note');
+  var al = document.getElementById('link-add-note');
+  if(eb) eb.addEventListener('click', function(){ openNoteModal(note); });
+  if(db) db.addEventListener('click', deleteNote);
+  if(al) al.addEventListener('click', function(e){ e.preventDefault(); openNoteModal(''); });
 }
 
-function renderStatusBadge(status){
-  const badge=document.getElementById('detail-status-badge');
-  badge.className='detail-status-badge';
-  if(!status){badge.textContent='LIBRE';badge.classList.add('badge-libre');return;}
-  const s=status.toLowerCase();
-  const map={jour:'JOUR',nuit:'NUIT',mn:'MN',repos:'REPOS',conges:'CONGÉS',ca:'CA',ru:'RU',rp:'RP',rn:'RN'};
-  badge.textContent=map[s]||status.toUpperCase();
-  const cls=['ca','ru','rp','rn','conges'].includes(s)?'conges':(['jour','nuit','mn','repos'].includes(s)?s:'custom');
-  badge.classList.add(`badge-${cls}`);
+function renderStatusBadge(status) {
+  var badge = document.getElementById('detail-status-badge');
+  badge.className = 'detail-status-badge';
+  if(!status){ badge.textContent='LIBRE'; badge.classList.add('badge-libre'); return; }
+  var s = status.toLowerCase();
+  var map = {jour:'JOUR',nuit:'NUIT',mn:'MN',repos:'REPOS',conges:'CGE',ca:'CA',ru:'RU',rp:'RP',rn:'RN'};
+  badge.textContent = map[s]||status.toUpperCase();
+  var cls = ['ca','ru','rp','rn','conges'].includes(s)?'conges':(['jour','nuit','mn','repos'].includes(s)?s:'custom');
+  badge.classList.add('badge-'+cls);
 }
 
-// ── Calcul salaire ───────────────────────────────────────
-// MN = travail de nuit CE jour-là (soir vers lendemain matin)
-// Donc si MN un lundi → travail nuit lundi soir → PAS de MN si ce "lundi" est dimanche (impossible mais garde logique)
-function calcDaySalary(dateStr){
-  const shift=shiftsCache[dateStr];
-  if(!shift?.status) return {total:0,breakdown:'Aucun service'};
-  const s=shift.status.toLowerCase();
-  let total=0, parts=[];
-  if(s==='jour'){
-    total=settings.rateJour; parts.push(`Jour: ${settings.rateJour}€`);
-  } else if(s==='nuit'){
-    total=settings.rateNuit; parts.push(`Nuit: ${settings.rateNuit}€`);
-  } else if(s==='mn'){
-    // MN = montée de nuit = travail nuit ce soir
-    total=settings.rateNuit+settings.rateMN;
-    parts.push(`Nuit: ${settings.rateNuit}€`);
-    parts.push(`MN: ${settings.rateMN}€`);
-  } else if(['repos','conges','ca','ru','rp','rn','autre'].includes(s)){
-    total=0; parts.push(shift.status.toUpperCase());
-  } else {
-    total=0; parts.push(shift.status);
-  }
-  return{total,breakdown:parts.join(' + ')};
+// ── Calcul salaire ──────────────────────────────────────
+function calcDaySalary(dateStr) {
+  var shift = shiftsCache[dateStr];
+  if(!shift || !shift.status) return {total:0, breakdown:'Aucun service'};
+  var s = shift.status.toLowerCase();
+  var total = 0, parts = [];
+  if(s==='jour')      { total=settings.rateJour; parts.push('Jour: '+settings.rateJour+String.fromCharCode(8364)); }
+  else if(s==='nuit') { total=settings.rateNuit; parts.push('Nuit: '+settings.rateNuit+String.fromCharCode(8364)); }
+  else if(s==='mn')   { total=settings.rateNuit+settings.rateMN; parts.push('Nuit: '+settings.rateNuit+String.fromCharCode(8364)); parts.push('MN: '+settings.rateMN+String.fromCharCode(8364)); }
+  else                { parts.push(shift.status.toUpperCase()); }
+  return {total:total, breakdown:parts.join(' + ')};
 }
 
-// ── Résumé mensuel ───────────────────────────────────────
-function updateMonthlySummary(){
-  let jours=0,nuits=0,repos=0,total=settings.base;
-  const days=new Date(currentYear,currentMonth+1,0).getDate();
-  for(let d=1;d<=days;d++){
-    const ds=`${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const shift=shiftsCache[ds]; if(!shift?.status) continue;
-    const s=shift.status.toLowerCase();
-    if(s==='jour'){  jours++; total+=settings.rateJour; }
+// ── Résumés ─────────────────────────────────────────────
+function updateMonthlySummary() {
+  var jours=0, nuits=0, repos=0, total=settings.base;
+  var days = new Date(currentYear, currentMonth+1, 0).getDate();
+  for(var d=1; d<=days; d++) {
+    var ds = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var shift = shiftsCache[ds]; if(!shift||!shift.status) continue;
+    var s = shift.status.toLowerCase();
+    if(s==='jour')   { jours++; total+=settings.rateJour; }
     else if(s==='nuit'){ nuits++; total+=settings.rateNuit; }
-    else if(s==='mn'){   nuits++; total+=settings.rateNuit+settings.rateMN; }
+    else if(s==='mn')  { nuits++; total+=settings.rateNuit+settings.rateMN; }
     else if(s==='repos') repos++;
   }
-  document.getElementById('sum-jours').textContent =jours;
-  document.getElementById('sum-nuits').textContent =nuits;
-  document.getElementById('sum-repos').textContent =repos;
-  document.getElementById('sum-salary').textContent=total.toFixed(2)+' €';
+  document.getElementById('sum-jours').textContent  = jours;
+  document.getElementById('sum-nuits').textContent  = nuits;
+  document.getElementById('sum-repos').textContent  = repos;
+  document.getElementById('sum-salary').textContent = total.toFixed(2)+' €';
 }
 
-// ── Stats panel ──────────────────────────────────────────
-function updateStatsPanel(){
-  let jours=0,nuits=0,mn=0,repos=0,conges=0,ca=0,ru=0,rp=0,rn=0,autre=0;
-  let totalSalary=settings.base;
-  const days=new Date(currentYear,currentMonth+1,0).getDate();
-  for(let d=1;d<=days;d++){
-    const ds=`${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const shift=shiftsCache[ds]; if(!shift?.status) continue;
-    const s=shift.status.toLowerCase();
-    if(s==='jour'){   jours++; totalSalary+=settings.rateJour; }
-    else if(s==='nuit'){ nuits++; totalSalary+=settings.rateNuit; }
-    else if(s==='mn'){   mn++;   nuits++; totalSalary+=settings.rateNuit+settings.rateMN; }
-    else if(s==='repos') repos++;
-    else if(s==='ca')    ca++;
-    else if(s==='ru')    ru++;
-    else if(s==='rp')    rp++;
-    else if(s==='rn')    rn++;
-    else if(s==='conges'||s==='autre') autre++;
+function updateStatsPanel() {
+  var j=0,n=0,mn=0,r=0,ca=0,ru=0,rp=0,rn=0,au=0,sal=settings.base;
+  var days = new Date(currentYear, currentMonth+1, 0).getDate();
+  for(var d=1; d<=days; d++) {
+    var ds = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var shift = shiftsCache[ds]; if(!shift||!shift.status) continue;
+    var s = shift.status.toLowerCase();
+    var info = calcDaySalary(ds); sal += info.total;
+    if(s==='jour') j++;
+    else if(s==='nuit') n++;
+    else if(s==='mn')  { mn++; n++; }
+    else if(s==='repos') r++;
+    else if(s==='ca')  ca++;
+    else if(s==='ru')  ru++;
+    else if(s==='rp')  rp++;
+    else if(s==='rn')  rn++;
+    else if(s&&s!=='libre') au++;
   }
-  const grid=document.getElementById('stats-grid');
-  grid.innerHTML=`
-    <div class="stat-card"><div class="stat-card-title">☀️ Jours</div><div class="stat-card-value">${jours}</div></div>
-    <div class="stat-card"><div class="stat-card-title">🌙 Nuits</div><div class="stat-card-value">${nuits}</div></div>
-    <div class="stat-card"><div class="stat-card-title">🌄 MN</div><div class="stat-card-value">${mn}</div></div>
-    <div class="stat-card"><div class="stat-card-title">🏠 Repos</div><div class="stat-card-value">${repos}</div></div>
-    <div class="stat-card"><div class="stat-card-title">🏖️ CA</div><div class="stat-card-value">${ca}</div></div>
-    <div class="stat-card"><div class="stat-card-title">😴 RU</div><div class="stat-card-value">${ru}</div></div>
-    <div class="stat-card"><div class="stat-card-title">🛋️ RP</div><div class="stat-card-value">${rp}</div></div>
-    <div class="stat-card"><div class="stat-card-title">🌃 RN</div><div class="stat-card-value">${rn}</div></div>
-    <div class="stat-card" style="grid-column:span 2">
-      <div class="stat-card-title">💰 Estimé brut ${MONTHS_FR[currentMonth]}</div>
-      <div class="stat-card-value" style="color:var(--blue)">${totalSalary.toFixed(2)} €</div>
-    </div>`;
+  var grid = document.getElementById('stats-grid');
+  grid.innerHTML =
+    '<div class="stat-card"><div class="stat-card-title">&#9728; Jours</div><div class="stat-card-value">'+j+'</div></div>'
+   +'<div class="stat-card"><div class="stat-card-title">&#127769; Nuits</div><div class="stat-card-value">'+n+'</div></div>'
+   +'<div class="stat-card"><div class="stat-card-title">&#127748; MN</div><div class="stat-card-value">'+mn+'</div></div>'
+   +'<div class="stat-card"><div class="stat-card-title">&#127968; Repos</div><div class="stat-card-value">'+r+'</div></div>'
+   +'<div class="stat-card"><div class="stat-card-title">CA</div><div class="stat-card-value">'+ca+'</div></div>'
+   +'<div class="stat-card"><div class="stat-card-title">RU</div><div class="stat-card-value">'+ru+'</div></div>'
+   +'<div class="stat-card"><div class="stat-card-title">RP</div><div class="stat-card-value">'+rp+'</div></div>'
+   +'<div class="stat-card"><div class="stat-card-title">RN</div><div class="stat-card-value">'+rn+'</div></div>'
+   +'<div class="stat-card" style="grid-column:span 2"><div class="stat-card-title">Estime brut '+MONTHS_FULL[currentMonth]+'</div><div class="stat-card-value" style="color:var(--blue)">'+sal.toFixed(2)+' €</div></div>';
 }
 
-// ── Compteur congés ──────────────────────────────────────
-function countCongesByType(year){
-  const counts={CA:0,RU:0,RP:0,RN:0,AUTRE:0};
-  Object.entries(shiftsCache).forEach(([dateStr,shift])=>{
-    if(!shift?.status) return;
-    const d=parseDate(dateStr);
-    if(d.getFullYear()!==year) return;
-    const s=shift.status.toUpperCase();
+// ── Compteur congés ─────────────────────────────────────
+function countCongesByType(year) {
+  var counts = {CA:0,RU:0,RP:0,RN:0,AUTRE:0};
+  Object.keys(shiftsCache).forEach(function(dateStr) {
+    var shift = shiftsCache[dateStr];
+    if(!shift || !shift.status) return;
+    var d = parseDate(dateStr);
+    if(d.getFullYear() !== year) return;
+    var s = shift.status.toUpperCase();
     if(counts.hasOwnProperty(s)) counts[s]++;
     else if(s==='CONGES') counts.AUTRE++;
   });
   return counts;
 }
 
-function updateCongesWidget(){
-  const widget=document.getElementById('conges-widget');
+function updateCongesWidget() {
+  var widget = document.getElementById('conges-widget');
   if(!widget) return;
-  const yrEl=document.getElementById('conges-year');
-  if(yrEl) yrEl.textContent=new Date().getFullYear();
-  const year=new Date().getFullYear();
-  const used=countCongesByType(year);
-  const quotas={CA:settings.quotaCA,RU:settings.quotaRU,RP:settings.quotaRP,RN:settings.quotaRN,AUTRE:settings.quotaAutre};
-  const emojis={CA:'🏖️',RU:'😴',RP:'🛋️',RN:'🌃',AUTRE:'📋'};
-
-  widget.innerHTML=CONGE_TYPES.map(type=>{
-    const quota=quotas[type]||0;
-    const use=used[type]||0;
-    const remain=Math.max(0,quota-use);
-    const pct=quota>0?Math.min(100,Math.round(use/quota*100)):0;
-    const color=pct>=90?'var(--red)':pct>=70?'var(--gold)':'var(--green)';
-    return `
-      <div class="conge-row">
-        <div class="conge-info">
-          <span class="conge-emoji">${emojis[type]}</span>
-          <span class="conge-label">${type}</span>
-          <span class="conge-count">${use}/${quota}</span>
-        </div>
-        <div class="conge-bar-wrap">
-          <div class="conge-bar" style="width:${pct}%;background:${color}"></div>
-        </div>
-        <span class="conge-remain" style="color:${color}">${remain}j restants</span>
-      </div>`;
+  var yrEl = document.getElementById('conges-year');
+  if(yrEl) yrEl.textContent = new Date().getFullYear();
+  var year   = new Date().getFullYear();
+  var used   = countCongesByType(year);
+  var quotas = {CA:settings.quotaCA,RU:settings.quotaRU,RP:settings.quotaRP,RN:settings.quotaRN,AUTRE:settings.quotaAutre};
+  widget.innerHTML = CONGE_TYPES.map(function(type) {
+    var quota   = quotas[type]||0;
+    var use     = used[type]||0;
+    var remain  = Math.max(0, quota-use);
+    var pct     = quota>0 ? Math.min(100, Math.round(use/quota*100)) : 0;
+    var color   = pct>=90 ? 'var(--red)' : pct>=70 ? 'var(--gold)' : 'var(--green)';
+    return '<div class="conge-row">'
+      +'<div class="conge-info">'
+      +'<span class="conge-emoji">'+CONGE_EMOJIS[type]+'</span>'
+      +'<span class="conge-label">'+type+'</span>'
+      +'<span class="conge-count">'+use+'/'+quota+'</span>'
+      +'</div>'
+      +'<div class="conge-bar-wrap"><div class="conge-bar" style="width:'+pct+'%;background:'+color+'"></div></div>'
+      +'<span class="conge-remain" style="color:'+color+'">'+remain+'j restants</span>'
+      +'</div>';
   }).join('');
 }
 
-// ── Dock ─────────────────────────────────────────────────
-document.querySelectorAll('.dock-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const action=btn.dataset.action;
-    if(!selectedDate&&action!=='note'&&action!=='autre'&&action!=='export'){
-      toast('Sélectionnez un jour d\'abord','info'); return;
+// ── Dock ────────────────────────────────────────────────
+document.querySelectorAll('.dock-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var action = btn.getAttribute('data-action');
+    if(!selectedDate && action!=='export') {
+      toast('Selectionnez un jour','info'); return;
     }
     handleAction(action);
   });
 });
 
-async function handleAction(action){
-  if(action==='note'){   openNoteModal(shiftsCache[selectedDate]?.note||''); return; }
-  if(action==='conges'){  openCongesModal(); return; }
-  if(action==='autre'){  openAutreModal(); return; }
-  if(action==='export'){ exportExcel(); return; }
-  if(action==='effacer'){
-    await deleteEntry(selectedDate); renderCalendar(); selectDay(selectedDate);
-    toast('Effacé','info'); return;
+async function handleAction(action) {
+  if(action==='note')    { openNoteModal(shiftsCache[selectedDate]&&shiftsCache[selectedDate].note||''); return; }
+  if(action==='conges')  { openCongesModal(); return; }
+  if(action==='autre')   { openAutreModal(); return; }
+  if(action==='export')  { exportExcel(); return; }
+  if(action==='effacer') {
+    await deleteEntry(selectedDate);
+    renderCalendar(); selectDay(selectedDate);
+    toast('Efface','info'); return;
   }
-  await saveEntry(selectedDate,action);
-  if(action==='jour'){
-    const existing=shiftsCache[selectedDate]?.note||'';
-    if(!existing.includes('Pause 12h-13h')){
-      await saveEntry(selectedDate,null,existing?existing+'\nPause 12h-13h':'Pause 12h-13h');
+  await saveEntry(selectedDate, action, null, false);
+  if(action==='jour') {
+    var existing = shiftsCache[selectedDate]&&shiftsCache[selectedDate].note||'';
+    if(existing.indexOf('Pause 12h-13h')===-1) {
+      await saveEntry(selectedDate, null, existing?existing+'\nPause 12h-13h':'Pause 12h-13h', false);
     }
   }
   renderCalendar(); selectDay(selectedDate);
-  toast('Service enregistré ✓','success');
+  toast('Service enregistre','success');
 }
 
-// ── Notes ────────────────────────────────────────────────
-function openNoteModal(cur=''){
-  if(!selectedDate){toast('Sélectionnez un jour d\'abord','info');return;}
-  document.getElementById('note-textarea').value=cur; openModal('modal-note');
+// ── Notes ───────────────────────────────────────────────
+function openNoteModal(cur) {
+  if(!selectedDate) { toast('Selectionnez un jour','info'); return; }
+  document.getElementById('note-textarea').value = cur||'';
+  openModal('modal-note');
 }
-async function saveNote(){
-  const text=document.getElementById('note-textarea').value.trim();
-  await saveEntry(selectedDate,null,text); closeModal('modal-note');
-  renderCalendar(); selectDay(selectedDate); toast('Note sauvegardée ✓','success');
+async function saveNote() {
+  var text = document.getElementById('note-textarea').value.trim();
+  await saveEntry(selectedDate, null, text, false);
+  closeModal('modal-note');
+  renderCalendar(); selectDay(selectedDate);
+  toast('Note sauvegardee','success');
 }
-async function deleteNote(){
-  await saveEntry(selectedDate,null,''); renderCalendar(); selectDay(selectedDate); toast('Note supprimée','info');
+async function deleteNote() {
+  await saveEntry(selectedDate, null, '', false);
+  renderCalendar(); selectDay(selectedDate);
+  toast('Note supprimee','info');
 }
-document.getElementById('save-note-btn').addEventListener('click',saveNote);
-document.getElementById('close-note-modal').addEventListener('click',()=>closeModal('modal-note'));
-document.getElementById('close-note-modal-2').addEventListener('click',()=>closeModal('modal-note'));
+document.getElementById('save-note-btn').addEventListener('click', saveNote);
+document.getElementById('close-note-modal').addEventListener('click', function(){ closeModal('modal-note'); });
+document.getElementById('close-note-modal-2').addEventListener('click', function(){ closeModal('modal-note'); });
 
-
-// ── Modale Congés ────────────────────────────────────────
-function openCongesModal(){
-  if(!selectedDate){toast('Sélectionnez un jour d'abord','info');return;}
-  const year=new Date().getFullYear();
-  const used=countCongesByType(year);
-  const quotas={CA:settings.quotaCA,RU:settings.quotaRU,RP:settings.quotaRP,RN:settings.quotaRN,AUTRE:settings.quotaAutre};
-  const emojis={CA:'🏖️',RU:'😴',RP:'🛋️',RN:'🌃',AUTRE:'📋'};
-  const grid=document.getElementById('conges-choice-grid');
-  grid.innerHTML='';
-  CONGE_TYPES.forEach(type=>{
-    const quota=quotas[type]||0;
-    const use=used[type]||0;
-    const remain=Math.max(0,quota-use);
-    const isActive=shiftsCache[selectedDate]?.status?.toUpperCase()===type;
-    const btn=document.createElement('button');
-    btn.className='conges-choice-btn'+(isActive?' active':'')+(remain<=0&&!isActive?' depleted':'');
-    btn.innerHTML=`
-      <span class="cc-emoji">${emojis[type]}</span>
-      <span class="cc-type">${type}</span>
-      <span class="cc-label">${CONGE_LABELS[type]}</span>
-      <span class="cc-remain">${remain}j restants</span>`;
-    btn.addEventListener('click',async()=>{
-      await saveEntry(selectedDate,type);
+// ── Modale Congés ───────────────────────────────────────
+function openCongesModal() {
+  if(!selectedDate) { toast('Selectionnez un jour','info'); return; }
+  var year   = new Date().getFullYear();
+  var used   = countCongesByType(year);
+  var quotas = {CA:settings.quotaCA,RU:settings.quotaRU,RP:settings.quotaRP,RN:settings.quotaRN,AUTRE:settings.quotaAutre};
+  var grid   = document.getElementById('conges-choice-grid');
+  grid.innerHTML = '';
+  CONGE_TYPES.forEach(function(type) {
+    var quota   = quotas[type]||0;
+    var use     = used[type]||0;
+    var remain  = Math.max(0, quota-use);
+    var isActive = shiftsCache[selectedDate] && shiftsCache[selectedDate].status && shiftsCache[selectedDate].status.toUpperCase()===type;
+    var btn = document.createElement('button');
+    btn.className = 'conges-choice-btn'+(isActive?' active':'')+(remain<=0&&!isActive?' depleted':'');
+    btn.innerHTML =
+      '<span class="cc-emoji">'+CONGE_EMOJIS[type]+'</span>'
+      +'<span class="cc-type">'+type+'</span>'
+      +'<span class="cc-label">'+CONGE_LABELS[type]+'</span>'
+      +'<span class="cc-remain">'+remain+'j restants</span>';
+    btn.addEventListener('click', async function() {
+      await saveEntry(selectedDate, type, null, false);
       closeModal('modal-conges');
       renderCalendar(); selectDay(selectedDate);
-      toast(`${type} posé ✓`,'success');
+      toast(type+' pose','success');
     });
     grid.appendChild(btn);
   });
   openModal('modal-conges');
 }
+document.getElementById('close-conges-modal').addEventListener('click', function(){ closeModal('modal-conges'); });
 
-// ── Autre ────────────────────────────────────────────────
-function openAutreModal(){
-  if(!selectedDate){toast('Sélectionnez un jour d\'abord','info');return;}
-  const grid=document.getElementById('code-grid'); grid.innerHTML='';
-  CUSTOM_CODES.forEach(c=>{
-    const btn=document.createElement('button'); btn.className='code-btn';
-    btn.innerHTML=`<span class="code-emoji">${c.emoji}</span>${c.label}`;
-    btn.addEventListener('click',async()=>{
-      await saveEntry(selectedDate,c.code); closeModal('modal-autre');
-      renderCalendar(); selectDay(selectedDate); toast(`${c.label} enregistré ✓`,'success');
+// ── Autre ───────────────────────────────────────────────
+function openAutreModal() {
+  if(!selectedDate) { toast('Selectionnez un jour','info'); return; }
+  var grid = document.getElementById('code-grid');
+  grid.innerHTML = '';
+  CUSTOM_CODES.forEach(function(c) {
+    var btn = document.createElement('button');
+    btn.className = 'code-btn';
+    btn.innerHTML = '<span class="code-emoji">'+c.emoji+'</span>'+c.label;
+    btn.addEventListener('click', async function() {
+      await saveEntry(selectedDate, c.code, null, false);
+      closeModal('modal-autre');
+      renderCalendar(); selectDay(selectedDate);
+      toast(c.label+' enregistre','success');
     });
     grid.appendChild(btn);
   });
   openModal('modal-autre');
 }
-document.getElementById('close-autre-modal').addEventListener('click',()=>closeModal('modal-autre'));
-document.getElementById('close-conges-modal').addEventListener('click',()=>closeModal('modal-conges'));
+document.getElementById('close-autre-modal').addEventListener('click', function(){ closeModal('modal-autre'); });
 
 // ── Export Excel ─────────────────────────────────────────
-function exportExcel(){
-  const wb=XLSX.utils.book_new();
-  const year=currentYear;
-
-  // Un onglet par mois
-  for(let m=0;m<12;m++){
-    const rows=[];
-    const monthName=MONTHS_FR[m];
-    const days=new Date(year,m+1,0).getDate();
-
-    // En-tête
-    rows.push(['Date','Jour Semaine','Type de service','Salaire estimé (€)','Note']);
-
-    let totJour=0,totNuit=0,totMN=0,totRepos=0,totCA=0,totRU=0,totRP=0,totRN=0,totAutre=0;
-    let totalSalaire=0;
-
-    for(let d=1;d<=days;d++){
-      const ds=`${year}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const date=parseDate(ds);
-      const shift=shiftsCache[ds];
-      const status=shift?.status||'LIBRE';
-      const note=shift?.note||'';
-      const sal=calcDaySalary(ds);
-      totalSalaire+=sal.total;
-
-      const s=status.toLowerCase();
-      if(s==='jour') totJour++;
-      else if(s==='nuit') totNuit++;
-      else if(s==='mn'){ totMN++; totNuit++; }
-      else if(s==='repos') totRepos++;
+function exportExcel() {
+  var wb = XLSX.utils.book_new();
+  var year = currentYear;
+  for(var m=0; m<12; m++) {
+    var rows = [];
+    var days = new Date(year, m+1, 0).getDate();
+    rows.push(['Date','Jour','Type','Salaire variable (Eur)','Note']);
+    var totJ=0,totN=0,totMN=0,totR=0,totCA=0,totRU=0,totRP=0,totRN=0,totAu=0,totSal=0;
+    for(var d=1; d<=days; d++) {
+      var ds = year+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      var date = parseDate(ds);
+      var shift = shiftsCache[ds];
+      var status = shift&&shift.status ? shift.status.toUpperCase() : 'LIBRE';
+      var note   = shift&&shift.note   ? shift.note : '';
+      var sal    = calcDaySalary(ds);
+      totSal += sal.total;
+      var s = status.toLowerCase();
+      if(s==='jour') totJ++;
+      else if(s==='nuit') totN++;
+      else if(s==='mn') { totMN++; totN++; }
+      else if(s==='repos') totR++;
       else if(s==='ca') totCA++;
       else if(s==='ru') totRU++;
       else if(s==='rp') totRP++;
       else if(s==='rn') totRN++;
-      else if(s!=='libre') totAutre++;
-
+      else if(s&&s!=='libre') totAu++;
       rows.push([
-        `${String(d).padStart(2,'0')}/${String(m+1).padStart(2,'0')}/${year}`,
+        String(d).padStart(2,'0')+'/'+String(m+1).padStart(2,'0')+'/'+year,
         DAY_NAMES[date.getDay()],
-        status.toUpperCase(),
+        status,
         sal.total > 0 ? sal.total : '',
         note
       ]);
     }
-
-    // Ligne vide + résumé
     rows.push([]);
-    rows.push(['── RÉSUMÉ DU MOIS ──','','','','']);
-    rows.push(['Jours travaillés','',totJour,'','']);
-    rows.push(['Nuits travaillées','',totNuit,'','']);
-    rows.push(['Montées de nuit (MN)','',totMN,'','']);
-    rows.push(['Repos','',totRepos,'','']);
-    rows.push(['Congés Annuels (CA)','',totCA,'','']);
-    rows.push(['Repos Unique (RU)','',totRU,'','']);
-    rows.push(['Repos Principal (RP)','',totRP,'','']);
-    rows.push(['Repos de Nuit (RN)','',totRN,'','']);
-    rows.push(['Autres','',totAutre,'','']);
+    rows.push(['RESUME DU MOIS','','','','']);
+    rows.push(['Jours','',totJ,'','']);
+    rows.push(['Nuits','',totN,'','']);
+    rows.push(['Montees de nuit','',totMN,'','']);
+    rows.push(['Repos','',totR,'','']);
+    rows.push(['CA','',totCA,'','']);
+    rows.push(['RU','',totRU,'','']);
+    rows.push(['RP','',totRP,'','']);
+    rows.push(['RN','',totRN,'','']);
+    rows.push(['Autres','',totAu,'','']);
     rows.push([]);
-    rows.push(['Base mensuelle','',settings.base.toFixed(2)+' €','','']);
-    rows.push(['Variables du mois','',totalSalaire.toFixed(2)+' €','','']);
-    rows.push(['TOTAL ESTIMÉ BRUT','',(settings.base+totalSalaire).toFixed(2)+' €','','']);
-
-    const ws=XLSX.utils.aoa_to_sheet(rows);
-    // Largeurs colonnes
-    ws['!cols']=[{wch:14},{wch:14},{wch:20},{wch:20},{wch:40}];
-    XLSX.utils.book_append_sheet(wb,ws,monthName);
+    rows.push(['Base mensuelle','',settings.base,'','']);
+    rows.push(['Variables','',totSal,'','']);
+    rows.push(['TOTAL ESTIME BRUT','',settings.base+totSal,'','']);
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:14},{wch:14},{wch:16},{wch:20},{wch:40}];
+    XLSX.utils.book_append_sheet(wb, ws, MONTHS_FULL[m]);
   }
-
-  // Onglet récap annuel
-  const recapRows=[
-    ['Mois','Jours','Nuits','MN','Repos','CA','RU','RP','RN','Autres','Salaire estimé brut (€)']
-  ];
-  let grandTotal=0;
-  for(let m=0;m<12;m++){
-    const days=new Date(year,m+1,0).getDate();
-    let j=0,n=0,mn=0,r=0,ca=0,ru=0,rp=0,rn=0,au=0,sal=settings.base;
-    for(let d=1;d<=days;d++){
-      const ds=`${year}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const shift=shiftsCache[ds]; const s=(shift?.status||'').toLowerCase();
-      const info=calcDaySalary(ds); sal+=info.total;
-      if(s==='jour') j++;
-      else if(s==='nuit') n++;
-      else if(s==='mn'){ mn++; n++; }
-      else if(s==='repos') r++;
-      else if(s==='ca') ca++;
-      else if(s==='ru') ru++;
-      else if(s==='rp') rp++;
-      else if(s==='rn') rn++;
-      else if(s&&s!=='libre') au++;
+  // Recap annuel
+  var recapRows = [['Mois','Jours','Nuits','MN','Repos','CA','RU','RP','RN','Autres','Total brut (Eur)']];
+  var grandTotal = 0;
+  for(var m2=0; m2<12; m2++) {
+    var daysR = new Date(year,m2+1,0).getDate();
+    var j2=0,n2=0,mn2=0,r2=0,ca2=0,ru2=0,rp2=0,rn2=0,au2=0,sal2=settings.base;
+    for(var d2=1; d2<=daysR; d2++) {
+      var ds2 = year+'-'+String(m2+1).padStart(2,'0')+'-'+String(d2).padStart(2,'0');
+      var sh2 = shiftsCache[ds2]; var sv2=(sh2&&sh2.status||'').toLowerCase();
+      var inf = calcDaySalary(ds2); sal2 += inf.total;
+      if(sv2==='jour') j2++;
+      else if(sv2==='nuit') n2++;
+      else if(sv2==='mn') { mn2++; n2++; }
+      else if(sv2==='repos') r2++;
+      else if(sv2==='ca') ca2++;
+      else if(sv2==='ru') ru2++;
+      else if(sv2==='rp') rp2++;
+      else if(sv2==='rn') rn2++;
+      else if(sv2&&sv2!=='libre') au2++;
     }
-    grandTotal+=sal;
-    recapRows.push([MONTHS_FR[m],j,n,mn,r,ca,ru,rp,rn,au,sal.toFixed(2)]);
+    grandTotal += sal2;
+    recapRows.push([MONTHS_FULL[m2],j2,n2,mn2,r2,ca2,ru2,rp2,rn2,au2,sal2.toFixed(2)]);
   }
   recapRows.push([]);
   recapRows.push(['TOTAL ANNUEL','','','','','','','','','',grandTotal.toFixed(2)]);
-
-  const wsRecap=XLSX.utils.aoa_to_sheet(recapRows);
-  wsRecap['!cols']=[{wch:14},...Array(9).fill({wch:8}),{wch:22}];
-  XLSX.utils.book_append_sheet(wb,wsRecap,'Récap Annuel');
-
-  XLSX.writeFile(wb,`MyShift_${year}.xlsx`);
-  toast('Export Excel généré ✓','success');
+  var wsR = XLSX.utils.aoa_to_sheet(recapRows);
+  wsR['!cols'] = [{wch:14}].concat(Array(9).fill({wch:8})).concat([{wch:22}]);
+  XLSX.utils.book_append_sheet(wb, wsR, 'Recap Annuel');
+  XLSX.writeFile(wb, 'MyShift_'+year+'.xlsx');
+  toast('Export Excel genere','success');
 }
-
-// ── Modales ──────────────────────────────────────────────
-function openModal(id){
-  const el=document.getElementById(id); el.classList.remove('hidden');
-  el.addEventListener('click',function out(e){ if(e.target===el){closeModal(id);el.removeEventListener('click',out);} });
-}
-function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
 
 // ── Import Excel ─────────────────────────────────────────
-document.getElementById('btn-import-trigger').addEventListener('click',()=>document.getElementById('file-import').click());
-document.getElementById('file-import').addEventListener('change',async e=>{
-  const file=e.target.files[0]; if(!file) return; e.target.value='';
-  showLoading('Analyse du fichier…');
-  try{
-    const data=await readExcelFile(file);
-    const results=analyzeData(data);
-    if(!results||results.length===0){ hideLoading(); toast('Aucune donnée détectée','error'); return; }
+document.getElementById('btn-import-trigger').addEventListener('click', function() {
+  document.getElementById('file-import').click();
+});
+document.getElementById('file-import').addEventListener('change', async function(e) {
+  var file = e.target.files[0]; if(!file) return; e.target.value='';
+  showLoading('Analyse du fichier...');
+  try {
+    var data    = await readExcelFile(file);
+    var results = analyzeData(data);
+    if(!results||!results.length){ hideLoading(); toast('Aucune donnee detectee','error'); return; }
     await importSchedule(results);
     hideLoading(); await loadMonth(); renderCalendar();
-    toast(`${results.length} service(s) importé(s) ✓`,'success');
-  }catch(err){ hideLoading(); toast('Erreur import : '+err.message,'error'); }
+    toast(results.length+' service(s) importe(s)','success');
+  } catch(err) { hideLoading(); toast('Erreur import: '+err.message,'error'); }
 });
 
-function readExcelFile(file){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
-      try{ const wb=XLSX.read(e.target.result,{type:'array',cellDates:true}); const ws=wb.Sheets[wb.SheetNames[0]]; resolve(XLSX.utils.sheet_to_json(ws,{header:1,defval:''})); }
-      catch(err){reject(err);}
+function readExcelFile(file) {
+  return new Promise(function(resolve,reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var wb = XLSX.read(e.target.result,{type:'array',cellDates:true});
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        resolve(XLSX.utils.sheet_to_json(ws,{header:1,defval:''}));
+      } catch(err) { reject(err); }
     };
-    reader.onerror=()=>reject(new Error('Lecture impossible'));
+    reader.onerror = function(){ reject(new Error('Lecture impossible')); };
     reader.readAsArrayBuffer(file);
   });
 }
 
-function analyzeData(rows){
+function analyzeData(rows) {
   if(!rows||!rows.length) return [];
-  const legend=buildLegend(rows);
-  const userRowIdx=findUserRow(rows); if(userRowIdx===-1) return [];
-  const dateRowIdx=findDateRow(rows,userRowIdx); if(dateRowIdx===-1) return [];
-  const dateRow=rows[dateRowIdx], userRow=rows[userRowIdx];
-  const results=[];
-  for(let col=0;col<dateRow.length;col++){
-    const rawDate=dateRow[col], rawCode=userRow[col];
+  var legend     = buildLegend(rows);
+  var userRowIdx = findUserRow(rows); if(userRowIdx===-1) return [];
+  var dateRowIdx = findDateRow(rows,userRowIdx); if(dateRowIdx===-1) return [];
+  var dateRow = rows[dateRowIdx], userRow = rows[userRowIdx];
+  var results = [];
+  for(var col=0; col<dateRow.length; col++) {
+    var rawDate=dateRow[col], rawCode=userRow[col];
     if(!rawDate||!rawCode) continue;
-    const date=parseExcelDate(rawDate); if(!date) continue;
-    const code=String(rawCode).trim().toUpperCase(); if(!code) continue;
-    const status=resolveStatus(code,legend);
-    if(status) results.push({date:fmt(date),status,code});
+    var date=parseExcelDate(rawDate); if(!date) continue;
+    var code=String(rawCode).trim().toUpperCase(); if(!code) continue;
+    var status=resolveStatus(code,legend);
+    if(status) results.push({date:fmtDate(date),status:status,code:code});
   }
   return applyBusinessRules(results);
 }
 
-function buildLegend(rows){
-  const legend={};
-  const kw=['MEMO','CODE','CODES','N°','LÉGENDE','LEGENDE'];
-  let start=-1;
-  for(let i=rows.length-1;i>=Math.max(0,rows.length-30);i--){
-    if(kw.some(k=>rows[i].join(' ').toUpperCase().includes(k))){start=i;break;}
+function buildLegend(rows) {
+  var legend={};
+  var kw=['MEMO','CODE','CODES','LEGENDE'];
+  var start=-1;
+  for(var i=rows.length-1; i>=Math.max(0,rows.length-30); i--) {
+    if(kw.some(function(k){ return rows[i].join(' ').toUpperCase().indexOf(k)>-1; })) { start=i; break; }
   }
-  const s=start>=0?start:Math.max(0,rows.length-20);
-  for(let i=s;i<rows.length;i++){
-    const row=rows[i];
-    for(let j=0;j<row.length-1;j++){
-      const cell=String(row[j]).trim(), next=String(row[j+1]).trim().toLowerCase();
+  var s=start>=0?start:Math.max(0,rows.length-20);
+  for(var i2=s; i2<rows.length; i2++) {
+    var row=rows[i2];
+    for(var j=0; j<row.length-1; j++) {
+      var cell=String(row[j]).trim(), next=String(row[j+1]).trim().toLowerCase();
       if(!cell||!next) continue;
-      const status=guessStatusFromLabel(next);
-      if(status) legend[cell.toUpperCase()]=status;
+      var st=guessStatusFromLabel(next);
+      if(st) legend[cell.toUpperCase()]=st;
     }
   }
   return legend;
 }
 
-function guessStatusFromLabel(l){
-  if(l.includes('nuit')||l.includes('night')) return 'nuit';
-  if(l.includes('mn')||l.includes('montée')||l.includes('montee')) return 'mn';
-  if(l.includes('jour')||l.includes('day')||l.includes('matin')) return 'jour';
-  if(l.includes('repos')||l.includes('rest')) return 'repos';
-  if(l.includes('congé')||l.includes('conge')||l.includes('vacance')) return 'CA';
+function guessStatusFromLabel(l) {
+  if(l.indexOf('nuit')>-1||l.indexOf('night')>-1) return 'nuit';
+  if(l.indexOf('mn')>-1||l.indexOf('montee')>-1) return 'mn';
+  if(l.indexOf('jour')>-1||l.indexOf('matin')>-1) return 'jour';
+  if(l.indexOf('repos')>-1||l.indexOf('rest')>-1) return 'repos';
+  if(l.indexOf('conge')>-1||l.indexOf('vacance')>-1) return 'CA';
   return null;
 }
 
-function resolveStatus(code,legend){
+function resolveStatus(code,legend) {
   if(legend[code]) return legend[code];
-  const c=code.toLowerCase();
-  if(c==='mn'||c.includes('montee')||c.includes('montée')) return 'mn';
+  var c=code.toLowerCase();
+  if(c==='mn') return 'mn';
   if(c==='n'||/^n\d+$/.test(c)) return 'nuit';
   if(c==='j'||/^j\d+$/.test(c)) return 'jour';
   if(c==='r'||c==='rep') return 'repos';
-  if(c==='ca') return 'CA';
-  if(c==='ru') return 'RU';
-  if(c==='rp') return 'RP';
-  if(c==='rn') return 'RN';
-  if(c.includes('nuit')) return 'nuit';
-  if(c.includes('jour')) return 'jour';
-  if(/^[nj]\d+/.test(c)) return c.startsWith('n')?'nuit':'jour';
+  if(c==='ca') return 'CA'; if(c==='ru') return 'RU';
+  if(c==='rp') return 'RP'; if(c==='rn') return 'RN';
+  if(c.indexOf('nuit')>-1) return 'nuit';
+  if(c.indexOf('jour')>-1) return 'jour';
   return null;
 }
 
-function findUserRow(rows){
-  let best=0,idx=-1;
-  const p=/^[A-Z]{1,4}\d{0,4}$/;
-  rows.forEach((row,i)=>{
-    let score=0; row.forEach(cell=>{ const s=String(cell).trim().toUpperCase(); if(p.test(s)&&s.length>=1&&s.length<=6) score++; });
+function findUserRow(rows) {
+  var best=0,idx=-1;
+  var p=/^[A-Z]{1,4}\d{0,4}$/;
+  rows.forEach(function(row,i) {
+    var score=0;
+    row.forEach(function(cell){ var s=String(cell).trim().toUpperCase(); if(p.test(s)&&s.length>=1&&s.length<=6) score++; });
     if(score>best){best=score;idx=i;}
   });
   return best>=3?idx:-1;
 }
 
-function findDateRow(rows,userRowIdx){
-  for(let delta=1;delta<=5;delta++){
-    for(const sign of[-1,1]){
-      const idx=userRowIdx+sign*delta;
+function findDateRow(rows,userRowIdx) {
+  for(var delta=1; delta<=5; delta++) {
+    for(var si=0; si<2; si++) {
+      var sign=si===0?-1:1;
+      var idx=userRowIdx+sign*delta;
       if(idx<0||idx>=rows.length) continue;
-      let cnt=0; rows[idx].forEach(c=>{if(parseExcelDate(c)) cnt++;});
+      var cnt=0; rows[idx].forEach(function(c){ if(parseExcelDate(c)) cnt++; });
       if(cnt>=15) return idx;
     }
   }
   return -1;
 }
 
-function parseExcelDate(val){
+function parseExcelDate(val) {
   if(!val) return null;
   if(val instanceof Date&&!isNaN(val)) return val;
-  if(typeof val==='number'&&val>40000&&val<60000){
-    const d=new Date(Math.round((val-25569)*86400*1000)); if(!isNaN(d)) return d;
+  if(typeof val==='number'&&val>40000&&val<60000) {
+    var d=new Date(Math.round((val-25569)*86400*1000)); if(!isNaN(d)) return d;
   }
-  const s=String(val).trim();
-  const pats=[/^(\d{2})\/(\d{2})\/(\d{4})$/,/^(\d{4})-(\d{2})-(\d{2})$/,/^(\d{2})-(\d{2})-(\d{4})$/];
-  for(const p of pats){
-    const m=s.match(p); if(!m) continue;
-    let y,mo,d;
-    if(p.source.startsWith('^(\\d{4})'))[,y,mo,d]=m; else[,d,mo,y]=m;
-    const dt=new Date(+y,+mo-1,+d); if(!isNaN(dt)) return dt;
-  }
+  var s=String(val).trim();
+  var m1=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(m1) { var dt=new Date(+m1[3],+m1[2]-1,+m1[1]); if(!isNaN(dt)) return dt; }
+  var m2=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(m2) { var dt2=new Date(+m2[1],+m2[2]-1,+m2[3]); if(!isNaN(dt2)) return dt2; }
   return null;
 }
 
-function applyBusinessRules(entries){
-  entries.forEach(e=>{
-    // MN = travaille nuit CE soir → pas besoin d'ajouter MN le lendemain
-    // (c'est déjà le jour du travail)
+function applyBusinessRules(entries) {
+  entries.forEach(function(e) {
     if(e.status==='jour') e.note='Pause 12h-13h';
   });
   return entries;
 }
 
-async function importSchedule(entries){
-  for(let i=0;i<entries.length;i+=20){
-    await Promise.all(entries.slice(i,i+20).map(e=>saveEntry(e.date,e.status,e.note||null,true)));
+async function importSchedule(entries) {
+  for(var i=0; i<entries.length; i+=20) {
+    var batch=entries.slice(i,i+20);
+    await Promise.all(batch.map(function(e){ return saveEntry(e.date,e.status,e.note||null,true); }));
   }
 }
 
+// ── Modales ─────────────────────────────────────────────
+function openModal(id) {
+  var el=document.getElementById(id); el.classList.remove('hidden');
+  function out(e){ if(e.target===el){ closeModal(id); el.removeEventListener('click',out); } }
+  el.addEventListener('click', out);
+}
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
 // ── Init ─────────────────────────────────────────────────
 initAuth();
+
 }); // fin DOMContentLoaded
