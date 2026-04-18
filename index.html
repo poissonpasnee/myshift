@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#090b14"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=20260418b"/>
+  <title>MyShift AI</title>
+</head>
+<body>
+<div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+<main id="main">
+
+  <!-- ───── ÉCRAN AUTH ───── -->
+  <section id="authScreen" class="auth-screen">
+    <div class="glass auth-card">
+      <div class="brand-lockup">
+        <div class="logo-mark">
+          <svg viewBox="0 0 48 48" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 35 24 8l14 27"/><path d="M15 24h18"/>
+          </svg>
+        </div>
+        <div><h1>MyShift <span>AI</span></h1><p>Gérez votre planning automatiquement.</p></div>
+      </div>
+      <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="vous@exemple.com"></div>
+      <div class="field"><label for="password">Mot de passe</label><input id="password" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+      <div class="auth-actions">
+        <button id="loginBtn" class="btn btn-primary">Connexion</button>
+        <button id="registerBtn" class="btn btn-ghost">Créer un compte</button>
+      </div>
+      <p id="authMsg" class="auth-msg" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ───── ÉCRAN APP ───── -->
+  <section id="appScreen" class="app-screen hidden">
+
+    <!-- HEADER -->
+    <header class="topbar glass">
+      <div class="topbar-left">
+        <div class="eyebrow">MyShift AI</div>
+        <div class="topbar-user" id="topbarUser">—</div>
+      </div>
+      <div class="topbar-actions">
+        <button id="themeToggle" class="icon-btn" aria-label="Thème">◐</button>
+        <button id="importBtn" class="icon-btn" aria-label="Importer Excel">⇪</button>
+        <button id="settingsBtn" class="icon-btn" aria-label="Paramètres">⚙</button>
+        <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden>
+      </div>
+    </header>
+
+    <!-- TABS -->
+    <div class="tabs-row">
+      <button class="tab-btn active" id="tabToday" data-tab="today">Aujourd'hui</button>
+      <button class="tab-btn" id="tabStats" data-tab="stats">📊 Stats</button>
+    </div>
+
+    <!-- CALENDRIER -->
+    <section id="viewToday" class="calendar-card glass">
+      <div class="month-nav">
+        <button id="prevMonth" class="nav-btn" aria-label="Mois précédent">‹</button>
+        <div class="month-labels"><div class="month-name" id="monthName">Avril</div><div class="month-year" id="monthYear">2026</div></div>
+        <button id="nextMonth" class="nav-btn" aria-label="Mois suivant">›</button>
+      </div>
+      <div id="weekdayHeader" class="weekday-header"></div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+      <div class="month-stats">
+        <div class="stat-box"><strong id="countJ">0</strong><span>☀️ Jours</span></div>
+        <div class="stat-box"><strong id="countN">0</strong><span>🌙 Nuits</span></div>
+        <div class="stat-box"><strong id="countMN">0</strong><span>🌆 MN</span></div>
+        <div class="stat-box salary"><strong id="monthSalary">2 093,06 €</strong><span>Est. Brut</span></div>
+      </div>
+    </section>
+
+    <!-- DETAIL DU JOUR -->
+    <section class="detail-card glass" aria-live="polite">
+      <div class="detail-head">
+        <div><p class="detail-kicker">Jour sélectionné</p><h3 id="detailDate">Aucun jour sélectionné</h3></div>
+        <div id="detailStatus" class="status-pill">—</div>
+      </div>
+      <div id="detailContent" class="detail-content"><p class="muted-hint">Touchez une case du calendrier.</p></div>
+    </section>
+
+    <!-- STATS -->
+    <section id="viewStats" class="stats-card glass hidden">
+      <h3>Compteur de congés</h3>
+      <div class="conges-grid">
+        <div class="conges-box"><strong id="cCA">24</strong><span>CA disponibles</span></div>
+        <div class="conges-box"><strong id="cRU">12</strong><span>RU disponibles</span></div>
+        <div class="conges-box"><strong id="cRP">12</strong><span>RP disponibles</span></div>
+        <div class="conges-box"><strong id="cRN">0</strong><span>RN pris</span></div>
+      </div>
+      <div class="conges-taken">
+        <div class="ct-row"><span>CA pris</span><strong id="ctCA">0</strong></div>
+        <div class="ct-row"><span>RU pris</span><strong id="ctRU">0</strong></div>
+        <div class="ct-row"><span>RP pris</span><strong id="ctRP">0</strong></div>
+      </div>
+      <h3 style="margin-top:16px">Récapitulatif annuel</h3>
+      <div class="month-stats" style="margin-top:8px">
+        <div class="stat-box"><strong id="totalJ">0</strong><span>☀️ Jours</span></div>
+        <div class="stat-box"><strong id="totalN">0</strong><span>🌙 Nuits</span></div>
+        <div class="stat-box"><strong id="totalMN">0</strong><span>🌆 MN</span></div>
+        <div class="stat-box salary"><strong id="yearSalary">—</strong><span>Brut annuel</span></div>
+      </div>
+    </section>
+
+    <!-- DOCK -->
+    <nav class="dock glass" aria-label="Actions">
+      <button class="dock-btn status-jour" data-status="jour">☀️<span>JOUR</span></button>
+      <button class="dock-btn status-nuit" data-status="nuit">🌙<span>NUIT</span></button>
+      <button class="dock-btn status-mn" data-status="mn">🌆<span>MN</span></button>
+      <button class="dock-btn status-repos" data-status="repos">🏠<span>REPOS</span></button>
+      <button class="dock-btn status-conges" data-status="conges">🏖️<span>CONGÉS</span></button>
+      <button class="dock-btn" id="noteBtn">📝<span>NOTE</span></button>
+      <button class="dock-btn" id="otherBtn">⚙️<span>AUTRE</span></button>
+      <button class="dock-btn danger" id="clearBtn">🗑️<span>EFFACER</span></button>
+    </nav>
+
+  </section><!-- /appScreen -->
+</main>
+
+<!-- MODALES -->
+<dialog id="noteModal" class="modal glass">
+  <div class="modal-inner">
+    <div class="modal-head"><h3>Note</h3><button class="x-btn" id="closeNote" aria-label="Fermer">×</button></div>
+    <textarea id="noteText" rows="5" placeholder="Écrire une note..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelNote">Annuler</button>
+      <button class="btn btn-primary" id="saveNoteBtn">Sauvegarder</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="otherModal" class="modal glass">
+  <div class="modal-inner">
+    <div class="modal-head"><h3>Code personnalisé</h3><button class="x-btn" id="closeOther" aria-label="Fermer">×</button></div>
+    <div id="customCodes" class="codes-grid"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="cancelOther">Fermer</button></div>
+  </div>
+</dialog>
+
+<dialog id="congesModal" class="modal glass">
+  <div class="modal-inner">
+    <div class="modal-head"><h3>Type de congé</h3><button class="x-btn" id="closeConges" aria-label="Fermer">×</button></div>
+    <div class="codes-grid">
+      <button class="code-btn status-conges" data-ctype="CA">🏖️ CA</button>
+      <button class="code-btn status-conges" data-ctype="RU">🔵 RU</button>
+      <button class="code-btn status-conges" data-ctype="RP">🟣 RP</button>
+      <button class="code-btn status-conges" data-ctype="RN">⚫ RN</button>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="cancelConges">Annuler</button></div>
+  </div>
+</dialog>
+
+<dialog id="settingsModal" class="modal glass">
+  <div class="modal-inner settings-inner">
+    <div class="modal-head"><h3>Paramètres</h3><button class="x-btn" id="closeSettings" aria-label="Fermer">×</button></div>
+    <div class="field"><label>Prénom Nom</label><input id="rateNom" type="text" placeholder="ex: Jean DUPONT"></div>
+    <div class="field"><label>Base mensuelle (€)</label><input id="rateBase" type="number" step="0.01" value="2093.06"></div>
+    <div class="field"><label>Taux Jour</label><input id="rateJour" type="number" step="0.01" value="35"></div>
+    <div class="field"><label>Taux Nuit</label><input id="rateNuit" type="number" step="0.01" value="82"></div>
+    <div class="field"><label>Taux MN</label><input id="rateMN" type="number" step="0.01" value="15"></div>
+    <h4 style="margin-top:14px;color:var(--muted)">COMPTEURS CONGÉS</h4>
+    <div class="field"><label>Total CA</label><input id="maxCA" type="number" value="24"></div>
+    <div class="field"><label>Total RU</label><input id="maxRU" type="number" value="12"></div>
+    <div class="field"><label>Total RP</label><input id="maxRP" type="number" value="12"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelSettings">Fermer</button>
+      <button class="btn btn-primary" id="saveSettingsBtn">Sauvegarder</button>
+    </div>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="module" src="js/app.js?v=20260418b"></script>
+</body>
+</html>
