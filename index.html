@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -718,7 +718,7 @@ button { cursor: pointer; background: none; border: none; }
         </svg>
         <div class="auth-brand"><span class="brand-my">My</span><span class="brand-shift">Shift</span> <span class="brand-ai">AI</span></div>
       </div>
-      <p class="auth-tagline">Gérez votre planning automatiquement.</p>
+      <p class="auth-tagline">Gerez votre planning automatiquement.</p>
       <div id="auth-login-form">
         <div class="form-group">
           <label for="auth-email">Email</label>
@@ -726,11 +726,11 @@ button { cursor: pointer; background: none; border: none; }
         </div>
         <div class="form-group">
           <label for="auth-password">Mot de passe</label>
-          <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" />
+          <input type="password" id="auth-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" />
         </div>
         <div id="auth-error" class="auth-error hidden"></div>
         <button class="btn-primary" id="btn-login">Connexion</button>
-        <p class="auth-switch">Pas encore de compte ? <a href="#" id="link-register">Créer un compte</a></p>
+        <p class="auth-switch">Pas encore de compte ? <a href="#" id="link-register">Creer un compte</a></p>
       </div>
       <div id="auth-register-form" class="hidden">
         <div class="form-group">
@@ -739,11 +739,11 @@ button { cursor: pointer; background: none; border: none; }
         </div>
         <div class="form-group">
           <label for="reg-password">Mot de passe</label>
-          <input type="password" id="reg-password" placeholder="••••••••" autocomplete="new-password" />
+          <input type="password" id="reg-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password" />
         </div>
         <div id="reg-error" class="auth-error hidden"></div>
-        <button class="btn-primary" id="btn-register">Créer mon compte</button>
-        <p class="auth-switch">Déjà un compte ? <a href="#" id="link-login">Se connecter</a></p>
+        <button class="btn-primary" id="btn-register">Creer mon compte</button>
+        <p class="auth-switch">Deja un compte ? <a href="#" id="link-login">Se connecter</a></p>
       </div>
     </div>
   </div>
@@ -764,13 +764,10 @@ button { cursor: pointer; background: none; border: none; }
         <span class="header-user" id="header-username"></span>
       </div>
       <div class="header-actions">
-        <button class="icon-btn export-btn" id="btn-export-trigger" title="Exporter Excel" aria-label="Exporter en Excel">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
-        <button class="icon-btn" id="btn-import-trigger" title="Importer Excel" aria-label="Importer un fichier Excel">
+        <button class="icon-btn" id="btn-import-trigger" title="Importer Excel" aria-label="Importer Excel">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </button>
-        <button class="icon-btn" id="btn-settings" title="Paramètres" aria-label="Paramètres">
+        <button class="icon-btn" id="btn-settings" title="Parametres" aria-label="Parametres">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
         </button>
       </div>
@@ -780,12 +777,12 @@ button { cursor: pointer; background: none; border: none; }
       <div class="calendar-container glass">
         <div class="cal-nav">
           <button class="nav-btn" id="btn-prev-month">&lsaquo;</button>
-          <div class="cal-title"><span id="cal-month-name"></span> <span id="cal-year"></span></div>
+          <div class="cal-title"><span id="cal-month-name"></span>&nbsp;<span id="cal-year"></span></div>
           <button class="nav-btn" id="btn-next-month">&rsaquo;</button>
         </div>
         <div class="cal-tabs">
           <button class="tab-btn active" id="tab-today">Aujourd'hui</button>
-          <button class="tab-btn" id="tab-stats">Stats</button>
+          <button class="tab-btn" id="tab-stats">&#128202; Stats</button>
         </div>
         <div class="cal-grid" id="cal-grid">
           <div class="cal-headers" id="cal-headers"></div>
@@ -795,15 +792,9 @@ button { cursor: pointer; background: none; border: none; }
           <div class="summary-item"><span class="summary-icon">&#9728;</span><span class="summary-count" id="sum-jours">0</span><span class="summary-label">Jours</span></div>
           <div class="summary-item"><span class="summary-icon">&#127769;</span><span class="summary-count" id="sum-nuits">0</span><span class="summary-label">Nuits</span></div>
           <div class="summary-item"><span class="summary-icon">&#127968;</span><span class="summary-count" id="sum-repos">0</span><span class="summary-label">Repos</span></div>
-          <div class="summary-item salary"><span class="summary-salary" id="sum-salary">0 &#8364;</span><span class="summary-label">Est. Brut</span></div>
+          <div class="summary-item salary"><span class="summary-salary" id="sum-salary">0 &euro;</span><span class="summary-label">Est. Brut</span></div>
         </div>
-        <div class="conges-section">
-          <div class="conges-title">Solde Conges <span id="conges-year"></span></div>
-          <div id="conges-widget"></div>
-        </div>
-        <div class="stats-panel hidden" id="stats-panel">
-          <div class="stats-grid" id="stats-grid"></div>
-        </div>
+        <div class="stats-panel hidden" id="stats-panel"><div class="stats-grid" id="stats-grid"></div></div>
       </div>
 
       <div class="detail-zone glass" id="detail-zone">
@@ -829,17 +820,6 @@ button { cursor: pointer; background: none; border: none; }
     </nav>
   </div>
 
-  <!-- Modale Conges -->
-  <div class="modal-overlay hidden" id="modal-conges" role="dialog" aria-modal="true">
-    <div class="modal glass">
-      <div class="modal-header"><h3>Poser un conge</h3><button class="modal-close" id="close-conges-modal">&#10005;</button></div>
-      <div class="modal-body">
-        <p class="conges-modal-hint">Choisissez le type de conge.</p>
-        <div class="conges-choice-grid" id="conges-choice-grid"></div>
-      </div>
-    </div>
-  </div>
-
   <!-- Modale Note -->
   <div class="modal-overlay hidden" id="modal-note" role="dialog" aria-modal="true">
     <div class="modal glass">
@@ -860,6 +840,14 @@ button { cursor: pointer; background: none; border: none; }
     </div>
   </div>
 
+  <!-- Modale Conges -->
+  <div class="modal-overlay hidden" id="modal-conges" role="dialog" aria-modal="true">
+    <div class="modal glass">
+      <div class="modal-header"><h3>Poser un conge</h3><button class="modal-close" id="close-conges-modal">&#10005;</button></div>
+      <div class="modal-body"><div class="conges-choice-grid" id="conges-choice-grid"></div></div>
+    </div>
+  </div>
+
   <!-- Modale Parametres -->
   <div class="modal-overlay hidden" id="modal-settings" role="dialog" aria-modal="true">
     <div class="modal modal-lg glass">
@@ -873,25 +861,15 @@ button { cursor: pointer; background: none; border: none; }
         <section class="settings-section">
           <h4 class="settings-section-title">TAUX DE PAIE</h4>
           <div class="settings-rates">
-            <div class="rate-row"><label>Journee</label><div class="rate-input-wrap"><input type="number" id="rate-jour" value="35" min="0" /><span>&#8364;</span></div></div>
-            <div class="rate-row"><label>Nuit complete</label><div class="rate-input-wrap"><input type="number" id="rate-nuit" value="82" min="0" /><span>&#8364;</span></div></div>
-            <div class="rate-row"><label>Nuit seule</label><div class="rate-input-wrap"><input type="number" id="rate-nuit-seule" value="41" min="0" /><span>&#8364;</span></div></div>
-            <div class="rate-row"><label>Montee de nuit</label><div class="rate-input-wrap"><input type="number" id="rate-mn" value="15" min="0" /><span>&#8364;</span></div></div>
-          </div>
-        </section>
-        <section class="settings-section">
-          <h4 class="settings-section-title">QUOTAS CONGES</h4>
-          <div class="quota-grid">
-            <div class="quota-item"><label>CA</label><input type="number" id="quota-CA" value="24" min="0" /></div>
-            <div class="quota-item"><label>RU</label><input type="number" id="quota-RU" value="12" min="0" /></div>
-            <div class="quota-item"><label>RP</label><input type="number" id="quota-RP" value="12" min="0" /></div>
-            <div class="quota-item"><label>RN</label><input type="number" id="quota-RN" value="0" min="0" /></div>
-            <div class="quota-item" style="grid-column:span 2"><label>AUTRE</label><input type="number" id="quota-AUTRE" value="0" min="0" /></div>
+            <div class="rate-row"><label>Journee</label><div class="rate-input-wrap"><input type="number" id="rate-jour" value="35" min="0" /><span>&euro;</span></div></div>
+            <div class="rate-row"><label>Nuit complete</label><div class="rate-input-wrap"><input type="number" id="rate-nuit" value="82" min="0" /><span>&euro;</span></div></div>
+            <div class="rate-row"><label>Nuit seule</label><div class="rate-input-wrap"><input type="number" id="rate-nuit-seule" value="41" min="0" /><span>&euro;</span></div></div>
+            <div class="rate-row"><label>Montee de nuit</label><div class="rate-input-wrap"><input type="number" id="rate-mn" value="15" min="0" /><span>&euro;</span></div></div>
           </div>
         </section>
         <section class="settings-section">
           <h4 class="settings-section-title">BASE MENSUELLE</h4>
-          <div class="form-group"><label>Salaire de base (&#8364;)</label><input type="number" id="settings-base" value="2093.06" step="0.01" min="0" /></div>
+          <div class="form-group"><label>Salaire de base (&euro;)</label><input type="number" id="settings-base" value="2093.06" step="0.01" min="0" /></div>
         </section>
         <section class="settings-section">
           <h4 class="settings-section-title">APPLICATION</h4>
@@ -905,9 +883,35 @@ button { cursor: pointer; background: none; border: none; }
   <div class="toast-container" id="toast-container"></div>
   <input type="file" id="file-import" accept=".xlsx,.xls,.ods" style="display:none" />
 
+  <!-- CDN libs chargés EN PREMIER, de façon synchrone -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- App JS inline, après les CDN -->
   <script>
+
+(function() {
+  'use strict';
+
+  function waitForLibs(callback) {
+    var attempts = 0;
+    var check = function() {
+      attempts++;
+      if (typeof supabase !== 'undefined' && typeof XLSX !== 'undefined') {
+        callback();
+      } else if (attempts < 50) {
+        setTimeout(check, 100);
+      } else {
+        console.error('Librairies non chargees apres 5s');
+        document.getElementById('auth-error') && (document.getElementById('auth-error').textContent = 'Erreur chargement. Rechargez la page.');
+      }
+    };
+    check();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    waitForLibs(function() {
+
 // ═══════════════════════════════════════════════════════
 //  MyShift AI — app.js v4
 // ═══════════════════════════════════════════════════════
@@ -1789,6 +1793,12 @@ function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 initAuth();
 
 }); // fin DOMContentLoaded
+
+
+    }); // end waitForLibs
+  }); // end DOMContentLoaded
+
+})(); // end IIFE
 
   </script>
 </body>
