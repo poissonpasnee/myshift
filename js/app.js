@@ -48,12 +48,23 @@ function initSB(){
 
 /* ── AUTH ── */
 async function login(){
-  if(!st.sb) return toast('Supabase non disponible');
-  const email=$('#email').value.trim(), pw=$('#password').value;
-  if(!email||!pw) return toast('Email et mot de passe requis');
-  const {data,error} = await st.sb.auth.signInWithPassword({email,password:pw});
-  if(error) return $('#authMsg').textContent=error.message;
-  st.user=data.user; enterApp();
+  const email = $('#email').value.trim();
+  const pw    = $('#password').value;
+  if(!email || !pw) { $('#authMsg').textContent = 'Email et mot de passe requis'; return; }
+  if(!st.sb) { $('#authMsg').textContent = 'Connexion Supabase non disponible'; return; }
+  $('#loginBtn').disabled = true;
+  $('#loginBtn').textContent = '…';
+  try {
+    const { data, error } = await st.sb.auth.signInWithPassword({ email, password: pw });
+    if(error) { $('#authMsg').textContent = error.message; return; }
+    st.user = data.user;
+    enterApp();
+  } catch(e) {
+    $('#authMsg').textContent = 'Erreur réseau : ' + e.message;
+  } finally {
+    $('#loginBtn').disabled = false;
+    $('#loginBtn').textContent = 'Connexion';
+  }
 }
 async function register(){
   if(!st.sb) return toast('Supabase non disponible');
@@ -398,9 +409,20 @@ function applyMNLogic(entries){
 }
 
 /* ── INIT ── */
-applyTheme(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
-initSB();
-buildWeekdayHeader();
+document.addEventListener('DOMContentLoaded', async () => {
+  applyTheme(matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+  initSB();
+  buildWeekdayHeader();
 
-$('#loginBtn').addEventListener('click',login);
-$('#registerBtn').addEventListener('click',register);
+  $('#loginBtn').addEventListener('click', login);
+  $('#registerBtn').addEventListener('click', register);
+
+  // Vérifier session existante → entrer directement dans l'app
+  if (st.sb) {
+    const { data } = await st.sb.auth.getSession();
+    if (data?.session?.user) {
+      st.user = data.session.user;
+      enterApp();
+    }
+  }
+});
