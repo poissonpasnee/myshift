@@ -1,4 +1,4 @@
-/* MyShift AI — app.js v20260419b */
+/* MyShift AI — app.js v20260419d */
 'use strict';
 var SUPABASE_URL = 'https://thfxuliapdacxwdpbnca.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoZnh1bGlhcGRhY3h3ZHBibmNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MzAwMzQsImV4cCI6MjA5MjAwNjAzNH0.iIB_0t8SSF3pR3f-4rcUtYJz6cbS892LBpPdh_7wDuM';
@@ -141,7 +141,13 @@ function selectDay(dk){
     '<div class="salary-row"><span>Gain estimé du jour</span><strong>'+fmtM(sal)+'</strong></div>'+
     '<div class="salary-row"><span>Total mois estimé</span><strong style="font-size:15px">'+fmtM(monthTotal())+'</strong></div>'+
     noteHtml;
-  renderCalendar();
+  /* highlight selected cell without full re-render */
+  qsa('.day.selected').forEach(function(el){el.classList.remove('selected');});
+  var cells=qsa('.day:not(.empty)');
+  cells.forEach(function(cell){
+    var num=cell.querySelector('.day-num');
+    if(num&&keyOf(currentYear,currentMonth,parseInt(num.textContent))===dk)cell.classList.add('selected');
+  });
 }
 function clearDetail(){gid('detailDate').textContent='Aucun jour sélectionné';gid('detailStatus').textContent='—';gid('detailContent').innerHTML='<p class="muted-hint">Touchez une case du calendrier.</p>';}
 function daySal(s){return s==='jour'?rates.jour:s==='nuit'?rates.nuit:s==='mn'?rates.mn:0;}
@@ -164,7 +170,7 @@ function updateMiniBar(){
   if(bj)bj.textContent=j;
   if(bn)bn.textContent=n;
   if(bmn)bmn.textContent=mn;
-  if(bs)bs.textContent=Math.round(sal)+' €';
+  if(bs)bs.textContent=Math.round(sal)+'€';
 }
 
 function updateMonthStats(){
@@ -293,7 +299,7 @@ function applyMNLogic(list){
 function saveEntry(dk,patch){
   var prev=entries[dk]||{}, next=Object.assign({},prev,patch);
   if(!next.status&&!next.note&&!next.ctype)delete entries[dk]; else entries[dk]=next;
-  renderCalendar(); if(selectedDate===dk)selectDay(dk); updateStats();
+  renderCalendar(); if(selectedDate===dk){var e2=entries[dk]||{};gid('detailStatus').textContent=statusLbl(e2.status,e2.ctype)||'LIBRE';updateStats();selectDay(dk);} else {updateStats();}
   syncEntry(dk,next);
 }
 function syncEntry(dk,entry){
@@ -479,12 +485,9 @@ function updateNotifBtn(active) {
   }
 })();
 
-
-/* ═══════════════════════════════════════════
-   SWIPE MOBILE (iOS)
-═══════════════════════════════════════════ */
+/* ═══ SWIPE MOBILE iOS ═══ */
 (function(){
-  var startX=0, startY=0;
+  var startX=0,startY=0;
   document.addEventListener('touchstart',function(e){
     startX=e.touches[0].clientX;
     startY=e.touches[0].clientY;
@@ -493,11 +496,8 @@ function updateNotifBtn(active) {
     var dx=startX-e.changedTouches[0].clientX;
     var dy=Math.abs(startY-e.changedTouches[0].clientY);
     if(Math.abs(dx)>52&&dy<60){
-      if(dx>0){
-        currentMonth++;if(currentMonth>11){currentMonth=0;currentYear++;}
-      } else {
-        currentMonth--;if(currentMonth<0){currentMonth=11;currentYear--;}
-      }
+      if(dx>0){currentMonth++;if(currentMonth>11){currentMonth=0;currentYear++;}}
+      else{currentMonth--;if(currentMonth<0){currentMonth=11;currentYear--;}}
       selectedDate=null;renderCalendar();clearDetail();
     }
   },{passive:true});
