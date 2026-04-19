@@ -1,4 +1,4 @@
-/* MyShift AI — app.js v20260419d */
+/* MyShift AI — app.js v20260419e */
 'use strict';
 var SUPABASE_URL = 'https://thfxuliapdacxwdpbnca.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoZnh1bGlhcGRhY3h3ZHBibmNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0MzAwMzQsImV4cCI6MjA5MjAwNjAzNH0.iIB_0t8SSF3pR3f-4rcUtYJz6cbS892LBpPdh_7wDuM';
@@ -33,6 +33,20 @@ function initSB(){
   try{
     if(window.supabase&&window.supabase.createClient){
       sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+      /* Auto-restore session on reload */
+      sb.auth.getSession().then(function(res){
+        if(res.data&&res.data.session&&res.data.session.user){
+          currentUser=res.data.session.user;
+          enterApp();
+        }
+      }).catch(function(){});
+      /* Keep session in sync */
+      sb.auth.onAuthStateChange(function(event,session){
+        if(session&&session.user&&!currentUser){
+          currentUser=session.user;
+          enterApp();
+        }
+      });
     }
   }catch(e){console.error('Supabase init',e);}
 }
@@ -299,6 +313,8 @@ function applyMNLogic(list){
 function saveEntry(dk,patch){
   var prev=entries[dk]||{}, next=Object.assign({},prev,patch);
   if(!next.status&&!next.note&&!next.ctype)delete entries[dk]; else entries[dk]=next;
+  /* localStorage backup */
+  try{localStorage.setItem('myshift_entries',JSON.stringify(entries));}catch(e){}
   renderCalendar(); if(selectedDate===dk){var e2=entries[dk]||{};gid('detailStatus').textContent=statusLbl(e2.status,e2.ctype)||'LIBRE';updateStats();selectDay(dk);} else {updateStats();}
   syncEntry(dk,next);
 }
@@ -310,9 +326,18 @@ function syncEntry(dk,entry){
   }).catch(function(){});
 }
 function loadAllEntries(){
+  /* Load localStorage first as instant fallback */
+  try{
+    var local=localStorage.getItem('myshift_entries');
+    if(local){var parsed=JSON.parse(local);Object.assign(entries,parsed);renderCalendar();}
+  }catch(e){}
   if(!sb||!currentUser)return Promise.resolve();
   return sb.from('shifts').select('*').eq('user_id',currentUser.id).then(function(res){
-    if(!res.error&&res.data)res.data.forEach(function(row){if(row.date)entries[row.date]={status:row.status||null,note:row.note||null,ctype:row.ctype||null};});
+    if(!res.error&&res.data){
+      res.data.forEach(function(row){if(row.date)entries[row.date]={status:row.status||null,note:row.note||null,ctype:row.ctype||null};});
+      /* Sync localStorage with Supabase truth */
+      try{localStorage.setItem('myshift_entries',JSON.stringify(entries));}catch(e){}
+    }
   }).catch(function(){});
 }
 
