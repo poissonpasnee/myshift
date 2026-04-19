@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="css/styles.css?v=20260419a"/>
+  <link rel="stylesheet" href="css/styles.css?v=20260419c"/>
   <title>MyShift AI</title>
 </head>
 <body>
@@ -75,9 +75,9 @@
       </div>
       <div id="weekdayHeader" class="weekday-header"></div>
       <div class="mini-bar" id="miniBar">
-        <div class="mini-bar-item"><span class="dot dot-j"></span><strong id="mbJ">0</strong> J</div>
-        <div class="mini-bar-item"><span class="dot dot-n"></span><strong id="mbN">0</strong> N</div>
-        <div class="mini-bar-item"><span class="dot dot-mn"></span><strong id="mbMN">0</strong> MN</div>
+        <div class="mini-bar-item"><span class="dot dot-j"></span><strong id="mbJ">0</strong>&thinsp;J</div>
+        <div class="mini-bar-item"><span class="dot dot-n"></span><strong id="mbN">0</strong>&thinsp;N</div>
+        <div class="mini-bar-item"><span class="dot dot-mn"></span><strong id="mbMN">0</strong>&thinsp;MN</div>
         <div class="mini-bar-item"><span class="dot dot-s"></span><strong id="mbSal">—</strong></div>
       </div>
       <div id="calendarGrid" class="calendar-grid"></div>
@@ -192,12 +192,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="js/app.js?v=20260419a"></script>
+<script src="js/app.js?v=20260419d"></script>
 <script>
-  if("serviceWorker"in navigator){
+  if("serviceWorker" in navigator){
     navigator.serviceWorker.register("/myshift/sw.js")
-      .then(function(){console.log("SW registered");})
-      .catch(function(e){console.warn("SW error",e);});
+      .then(function(){console.log("SW ok");})
+      .catch(function(e){console.warn("SW fail",e);});
   }
 </script>
 </body>
